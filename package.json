@@ -1,0 +1,37 @@
+{
+  "name": "disertare",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Disertare — Procesador de textos profesional para investigación y desarrollo",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:viccardo1/disertare.git"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "rm -rf node_modules .turbo dist && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "phase:guard": "node ./scripts/phase-guard.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "dependencies": {
+    "@disertare/frontend": "workspace:^"
+  }
+}
