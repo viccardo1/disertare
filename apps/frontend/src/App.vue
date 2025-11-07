@@ -1,195 +1,130 @@
+<!-- /home/vicente/Disertare/apps/frontend/src/App.vue -->
 <template>
-  <div id="app" class="app-shell">
-    <header class="app-header">
-      <!-- Logo/Brand a la izquierda -->
-      <div class="brand-container">
-        <img src="/logo.svg" alt="Logo Disertare" class="brand-logo" />
+  <div id="app-shell">
+    <header class="global-header">
+      <div class="header-left">
+        <img src="/logo.svg" alt="Disertare" class="logo" />
         <span class="brand-text">Disertare</span>
       </div>
-
-      <!-- Navegación y acciones a la derecha -->
+      <nav class="header-nav">
+        <span class="nav-item">Tablero</span>
+        <span class="nav-item">Editor</span>
+        <span class="nav-item">Perfil</span>
+        <span class="nav-item">Repo</span>
+        <span class="nav-item">Accesibilidad</span>
+      </nav>
       <div class="header-right">
-        <nav>
-          <a href="#/dashboard">Tablero</a>
-          <a href="#/editor">Editor</a>
-          <a href="#/profile">Perfil</a>
-          <a href="#/repo">Repo</a>
-          <a href="#/accessibility" class="accessibility-link">Accesibilidad</a>
-        </nav>
-
-        <!-- Botón de login/logout/register -->
-        <button class="auth-button" @click="toggleAuth">
-          {{ isLoggedIn ? 'Salir' : 'Ingresar / Registrarse' }}
-        </button>
-
-        <!-- Conmutador de idioma (placeholder para F4.2) -->
-        <button class="btn-lang" aria-label="Cambiar idioma" disabled>
-          ES
-        </button>
+        <button class="auth-btn">Ingresar</button>
       </div>
     </header>
 
-    <main class="app-main">
-      <router-outlet />
-      <p>Bienvenido a Disertare — F0 Bootstrap activo.</p>
+    <main class="main-content">
+      <Editor />
     </main>
 
-    <footer class="app-footer">
-      <div class="footer-left">
-        Disertare © {{ currentYear }} — Todos los derechos reservados.
-      </div>
+    <footer class="global-footer">
+      <div class="footer-left">© 2025 Disertare — Todos los derechos reservados.</div>
       <div class="footer-right">
-        <a href="/terms">Términos</a>
-        <a href="/about">Sobre nosotros</a>
+        <a href="#">Términos</a>
+        <a href="#">Sobre nosotros</a>
       </div>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-
-// Estado simulado de autenticación (para F0)
-const isLoggedIn = ref(false);
-
-const currentYear = computed(() => new Date().getFullYear());
-
-// Función de ejemplo para el botón de autenticación
-const toggleAuth = () => {
-  isLoggedIn.value = !isLoggedIn.value;
-};
+import Editor from './editor/Editor.vue'
 </script>
 
 <style>
-:root {
-  --header-height: 48px;
-  --footer-height: 32px;
-  --toolbar-height: 40px;
-  --purple-fade: rgba(147, 112, 219, 0.1);
-  --bg-page: #ffffff;
-  --text-color: #1a1a1a;
-  --font-ui: 'Atkinson Hyperlegible', sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: var(--font-ui);
-  background-color: var(--bg-page);
-  color: var(--text-color);
-  overflow: hidden;
-}
-
-.app-shell {
+#app-shell {
   display: grid;
-  grid-template-rows: var(--header-height) 1fr var(--footer-height);
-  height: 100dvh;
-  width: 100vw;
+  grid-template-rows: 60px 1fr 40px;
+  height: 100vh;
+  font-family: 'Atkinson Hyperlegible', sans-serif;
+  margin: 0;
+  background: white;
 }
 
-.app-header,
-.app-footer {
-  background-color: var(--purple-fade);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+.global-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
-  font-size: 0.875rem;
-  z-index: 1000;
+  padding: 0 16px;
+  background: #e0d6ff33;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
-.app-header {
-  position: sticky;
-  top: 0;
-}
-
-.app-footer {
-  position: sticky;
-  bottom: 0;
-}
-
-.brand-container {
+/* ✅ Composición refinada: logo + texto como unidad de marca */
+.header-left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px; /* espacio ajustado */
 }
 
-.brand-logo {
-  width: 24px;
-  height: 24px;
+.logo {
+  height: 24px; /* ligeramente más pequeño para equilibrio visual */
 }
 
 .brand-text {
-  font-weight: 700;
+  color: #2d2d2d;
+  font-weight: 400; /* ✅ Regular 400, según §23 */
+  font-size: 17px;
+  font-family: 'Atkinson Hyperlegible', sans-serif;
+  line-height: 1;
+  letter-spacing: -0.02em; /* ligero ajuste tipográfico */
 }
 
-.header-right {
+.header-nav {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  gap: 20px;
 }
 
-.header-right nav {
-  display: flex;
-  gap: 1rem;
-}
-
-.header-right nav a {
-  text-decoration: none;
-  color: inherit;
-  padding: 0.25rem 0.5rem;
+.nav-item {
+  color: #333;
+  font-weight: 400;
+  padding: 4px 8px;
   border-radius: 4px;
-}
-
-.header-right nav a:hover,
-.header-right nav a:focus {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.accessibility-link {
-  font-weight: bold;
-}
-
-.auth-button {
-  background: none;
-  border: 1px solid rgba(0,0,0,0.2);
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  font: inherit;
   cursor: pointer;
+  font-size: 14px;
 }
 
-.btn-lang {
-  background: none;
-  border: 1px solid rgba(0,0,0,0.2);
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #222;
+}
+
+.auth-btn {
+  background: #e0d6ff33;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 0.125rem 0.5rem;
-  font: inherit;
-  cursor: not-allowed;
-  opacity: 0.6;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 14px;
 }
 
-.app-main {
-  overflow: auto;
-  padding: 1rem;
+.main-content {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+
+.global-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  background: #e0d6ff33;
+  font-size: 14px;
+  border-top: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 .footer-right a {
-  margin-left: 1rem;
+  margin-left: 16px;
   text-decoration: none;
-  color: inherit;
-}
-
-.footer-right a:hover {
-  text-decoration: underline;
+  color: #333;
 }
 </style>
