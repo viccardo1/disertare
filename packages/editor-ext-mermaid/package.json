@@ -1,0 +1,17 @@
+{
+  "name": "@disertare/editor-ext-mermaid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@tiptap/core": "3.10.2",
+    "@tiptap/pm": "3.10.2",
+    "@disertare/editor-core": "workspace:*"
+  },
+  "dependencies": {
+    "mermaid": "^10.9.1"
+  }
+}

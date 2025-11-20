@@ -18,20 +18,45 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "rm -rf node_modules .turbo dist && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
-    "phase:guard": "node ./scripts/phase-guard.mjs"
-  },
-  "devDependencies": {
-    "turbo": "^2.3.3",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.11",
-    "vue-tsc": "^2.1.10"
+    "phase:guard": "node ./scripts/phase-guard.mjs",
+    "dedupe:once": "pnpm -w dedupe --ignore-scripts"
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.12.3",
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.1.10"
+  },
   "dependencies": {
-    "@disertare/frontend": "workspace:^"
+    "@disertare/frontend": "workspace:^",
+    "@tiptap/core": "3.10.2",
+    "@tiptap/extension-table": "3.10.2",
+    "@tiptap/extension-table-cell": "3.10.2",
+    "@tiptap/extension-table-header": "3.10.2",
+    "@tiptap/extension-table-row": "3.10.2",
+    "@tiptap/pm": "3.10.2",
+    "@tiptap/starter-kit": "3.10.2",
+    "@tiptap/vue-3": "3.10.2",
+    "katex": "0.16.11",
+    "mermaid": "10.9.1",
+    "prismjs": "1.29.0"
+  },
+  "pnpm": {
+    "dedupePeerDependencies": true,
+    "overrides": {
+      "@tiptap/core": "3.10.2",
+      "@tiptap/pm": "3.10.2",
+      "@tiptap/starter-kit": "3.10.2",
+      "@tiptap/vue-3": "3.10.2",
+      "@tiptap/extension-table": "3.10.2",
+      "@tiptap/extension-table-row": "3.10.2",
+      "@tiptap/extension-table-cell": "3.10.2",
+      "@tiptap/extension-table-header": "3.10.2"
+    }
   }
 }
