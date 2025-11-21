@@ -9,15 +9,169 @@
         <!-- Contenedor oculto para medir altura de contenido (F2.2) -->
         <div ref="pageMeasure" class="page-measure" aria-hidden="true"></div>
 
+        <!-- Panel de referencias (F2.3) -->
+        <div
+          v-if="showReferencesPanel"
+          class="references-panel"
+        >
+          <div class="references-panel__header">
+            <span><strong>Citas</strong></span>
+            <button
+              type="button"
+              class="references-panel__close"
+              @click="toggleReferencesPanel"
+            >
+              ×
+            </button>
+          </div>
+
+          <div class="references-panel__row">
+            <label>
+              Estilo de cita
+              <select v-model="currentCitationStyle">
+                <option
+                  v-for="style in citationStyles"
+                  :key="style"
+                  :value="style"
+                >
+                  {{ style.toUpperCase() }}
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <div class="references-panel__row">
+            <div class="references-panel__row-title">
+              {{ editingRefId ? 'Editar referencia' : 'Nueva referencia rápida' }}
+            </div>
+            <label>
+              Autor (Apellido, Nombre)
+              <input
+                v-model="newRefAuthor"
+                placeholder="Pérez, Ana"
+              />
+            </label>
+            <label>
+              Año
+              <input
+                v-model="newRefYear"
+                placeholder="2020"
+              />
+            </label>
+            <label>
+              Título
+              <input
+                v-model="newRefTitle"
+                placeholder="Título de la obra"
+              />
+            </label>
+            <div class="references-panel__new-actions">
+              <button type="button" @click="addQuickReference">
+                {{ editingRefId ? 'Guardar cambios' : 'Agregar y citar' }}
+              </button>
+              <button
+                v-if="editingRefId"
+                type="button"
+                class="references-panel__secondary"
+                @click="cancelEditReference"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div class="references-panel__list">
+            <div
+              v-for="ref in references"
+              :key="ref.id"
+              class="references-panel__item"
+            >
+              <div class="references-panel__item-main">
+                <div class="references-panel__item-title">
+                  {{ ref.title || '[Sin título]' }}
+                </div>
+                <div class="references-panel__item-meta">
+                  {{ primaryAuthorLabel(ref) }} ·
+                  {{ ref.issued?.year ?? 's. f.' }}
+                </div>
+              </div>
+              <div class="references-panel__item-actions">
+                <button
+                  type="button"
+                  @click="insertCitationFor(ref.id)"
+                >
+                  Citar
+                </button>
+                <button
+                  type="button"
+                  @click="startEditReference(ref)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="references-panel__delete"
+                  @click="deleteReference(ref.id)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <p
+              v-if="references.length === 0"
+              class="references-panel__empty"
+            >
+              Aún no hay referencias. Crea una arriba.
+            </p>
+          </div>
+
+          <!-- Import/Export BibTeX / CSL-JSON -->
+          <div class="references-panel__import">
+            <details>
+              <summary>BibTeX / CSL-JSON</summary>
+              <div class="references-panel__import-section">
+                <label>
+                  BibTeX
+                  <textarea
+                    v-model="bibtexText"
+                    rows="4"
+                    spellcheck="false"
+                  ></textarea>
+                </label>
+                <div class="references-panel__import-actions">
+                  <button type="button" @click="importBibtex">
+                    Importar BibTeX
+                  </button>
+                </div>
+
+                <label>
+                  CSL-JSON
+                  <textarea
+                    v-model="cslJsonText"
+                    rows="4"
+                    spellcheck="false"
+                  ></textarea>
+                </label>
+                <div class="references-panel__import-actions">
+                  <button type="button" @click="importCslJson">
+                    Importar CSL-JSON
+                  </button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
         <!-- Vista CONTINUA (edición normal) -->
         <div
           v-if="editor && !isPagedPreview"
           class="editor-pane editor-pane--continuous"
         >
-          <editor-content :editor="editor" />
+          <EditorContent :editor="editor" />
         </div>
 
-        <!-- Vista PAGINADA 1:1 (preview de solo lectura) · F2.2 -->
+        <!-- Vista PAGINADA 1:1 (F2.2) -->
         <div
           v-if="editor && isPagedPreview"
           class="editor-pane editor-pane--paged"
@@ -38,9 +192,11 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Toolbar simple para pruebas de F2 (+ toggle F2.2) -->
-        <div v-if="editor" class="editor-toolbar">
+      <!-- Barra inferior de herramientas (F2) -->
+      <div class="editor-toolbar-container">
+        <div class="editor-toolbar">
           <button @click="insertKatex" :aria-label="t('editor.toolbar.katex')">
             fx
           </button>
@@ -55,6 +211,18 @@
           </button>
           <button @click="insertTable" :aria-label="t('editor.toolbar.table')">
             T
+          </button>
+          <button
+            @click="insertCitation"
+            :aria-label="t('editor.toolbar.citation')"
+          >
+            Cita
+          </button>
+          <button
+            @click="insertBibliographyBlock"
+            :aria-label="t('editor.toolbar.bibliography')"
+          >
+            Biblio
           </button>
           <button @click="insertImage" :aria-label="t('editor.toolbar.image')">
             Img
@@ -76,11 +244,22 @@
           >
             Geo
           </button>
-          <button @click="insertSlides" :aria-label="t('editor.toolbar.slides')">
+          <button
+            @click="insertSlides"
+            :aria-label="t('editor.toolbar.slides')"
+          >
             Slides
           </button>
+        </div>
 
-          <!-- Toggle F2.2: vista continua / paginada -->
+        <div class="editor-toolbar-secondary">
+          <button
+            type="button"
+            class="toolbar-toggle"
+            @click="toggleReferencesPanel"
+          >
+            Gestor de citas
+          </button>
           <button
             type="button"
             class="toolbar-toggle"
@@ -102,7 +281,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, markRaw, ref } from 'vue'
+import {
+  onMounted,
+  onUnmounted,
+  reactive,
+  markRaw,
+  ref,
+  watch,
+} from 'vue'
 import { EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { Editor } from '@tiptap/core'
@@ -125,6 +311,21 @@ import { Cad } from '@disertare/editor-ext-cad'
 import { Dicom } from '@disertare/editor-ext-dicom'
 import { GeoSpatial } from '@disertare/editor-ext-geospatial'
 import { Slides } from '@disertare/editor-ext-slides'
+import {
+  CitationInline,
+  Bibliography,
+  createCitationManager,
+  defaultCitationFormatter,
+  parseBibTeX,
+  formatBibTeX,
+  toCslJson,
+  fromCslJson,
+} from '@disertare/editor-citations'
+import type {
+  CitationStyleId,
+  Reference,
+  PersonName,
+} from '@disertare/editor-citations'
 
 type Page = {
   index: number
@@ -153,81 +354,323 @@ const pageMeasure = ref<HTMLElement | null>(null)
 // placeholder i18n (se integrará en fases posteriores)
 const t = (key: string) => key
 
+// ---- F2.3: gestor de citas y estilo actual -----------------------
+
+const citationManager = createCitationManager()
+const currentCitationStyle = ref<CitationStyleId>('apa')
+const citationStyles: CitationStyleId[] = [
+  'apa',
+  'mla',
+  'chicago',
+  'harvard',
+  'vancouver',
+  'ieee',
+  'acs',
+  'iso690',
+  'turabian',
+]
+
+const showReferencesPanel = ref(false)
+const references = ref<Reference[]>([])
+
+const newRefAuthor = ref('')
+const newRefYear = ref('')
+const newRefTitle = ref('')
+
+const editingRefId = ref<string | null>(null)
+
+const bibtexText = ref('')
+const cslJsonText = ref('')
+
+// --- util para obligar a re-renderizar citas y bibliografía -----
+
+function bumpCitationAndBibliographyRenderVersion(): void {
+  if (!editor) return
+
+  const { state, view } = editor
+  let tr = state.tr
+  let changed = false
+
+  state.doc.descendants((node, pos) => {
+    if (node.type.name === 'citationInline') {
+      const current =
+        (node.attrs as any).renderVersion != null
+          ? Number((node.attrs as any).renderVersion)
+          : 0
+
+      const newAttrs = {
+        ...node.attrs,
+        renderVersion: current + 1,
+      }
+
+      tr = tr.setNodeMarkup(pos, node.type, newAttrs)
+      changed = true
+    } else if (node.type.name === 'bibliography') {
+      const current =
+        (node.attrs as any).renderVersion != null
+          ? Number((node.attrs as any).renderVersion)
+          : 0
+
+      const newAttrs = {
+        ...node.attrs,
+        renderVersion: current + 1,
+      }
+
+      tr = tr.setNodeMarkup(pos, node.type, newAttrs)
+      changed = true
+    }
+  })
+
+  if (changed) {
+    view.dispatch(tr)
+  }
+}
+
+// cualquier cambio de estilo → el gestor actualiza su estilo
+// y actualizamos representaciones + BibTeX / CSL
+watch(currentCitationStyle, (style) => {
+  citationManager.setStyle(style)
+  refreshReferences()
+})
+
+function refreshReferences(): void {
+  const refs = citationManager.listReferences()
+  references.value = refs
+  bibtexText.value = formatBibTeX(refs)
+  cslJsonText.value = JSON.stringify(toCslJson(refs), null, 2)
+
+  // Forzamos re-render de citas y bibliografía para que
+  // el documento refleje los cambios de inmediato.
+  bumpCitationAndBibliographyRenderVersion()
+}
+
+function parsePersonName(input: string): PersonName | null {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+  const parts = trimmed.split(',')
+  if (parts.length === 2) {
+    const family = parts[0].trim()
+    const given = parts[1].trim()
+    return { family, given }
+  }
+  return { literal: trimmed }
+}
+
+const resetQuickForm = (): void => {
+  newRefAuthor.value = ''
+  newRefYear.value = ''
+  newRefTitle.value = ''
+}
+
+const addQuickReference = (): void => {
+  const authorName = parsePersonName(newRefAuthor.value)
+  const yearNum = parseInt(newRefYear.value, 10)
+  const issued =
+    Number.isFinite(yearNum) && !Number.isNaN(yearNum)
+      ? { year: yearNum }
+      : undefined
+
+  // modo edición
+  if (editingRefId.value) {
+    const id = editingRefId.value
+    citationManager.updateReference(id, {
+      title: newRefTitle.value || 'Referencia sin título',
+      author: authorName ? [authorName] : undefined,
+      issued,
+    })
+
+    editingRefId.value = null
+    resetQuickForm()
+    refreshReferences()
+    return
+  }
+
+  // modo alta rápida
+  const ref = citationManager.addReference({
+    type: 'article-journal',
+    title: newRefTitle.value || 'Referencia sin título',
+    author: authorName ? [authorName] : undefined,
+    issued,
+  })
+
+  resetQuickForm()
+  refreshReferences()
+
+  if (editor) {
+    editor
+      .chain()
+      .focus()
+      .insertCitation({
+        refId: ref.id,
+        locator: null,
+        prefix: null,
+        suffix: null,
+      })
+      .run()
+  }
+}
+
+const cancelEditReference = (): void => {
+  editingRefId.value = null
+  resetQuickForm()
+}
+
+const startEditReference = (ref: Reference): void => {
+  editingRefId.value = ref.id
+  newRefTitle.value = ref.title ?? ''
+
+  const a = ref.author && ref.author[0]
+  if (a?.family && a?.given) {
+    newRefAuthor.value = `${a.family}, ${a.given}`
+  } else if (a?.literal) {
+    newRefAuthor.value = a.literal
+  } else {
+    newRefAuthor.value = a?.family ?? a?.given ?? ''
+  }
+
+  newRefYear.value =
+    ref.issued && typeof ref.issued.year === 'number'
+      ? String(ref.issued.year)
+      : ''
+}
+
+const deleteReference = (id: string): void => {
+  citationManager.removeReference(id)
+  if (editingRefId.value === id) {
+    editingRefId.value = null
+    resetQuickForm()
+  }
+  refreshReferences()
+}
+
+const insertCitationFor = (refId: string): void => {
+  if (!editor) return
+  editor
+    .chain()
+    .focus()
+    .insertCitation({
+      refId,
+      locator: null,
+      prefix: null,
+      suffix: null,
+    })
+    .run()
+}
+
+function primaryAuthorLabel(ref: Reference): string {
+  const a = ref.author && ref.author[0]
+  if (!a) return 'Autor desconocido'
+  if (a.family && a.given) return `${a.family}, ${a.given}`
+  if (a.literal) return a.literal
+  return a.family ?? a.given ?? 'Autor'
+}
+
+const importBibtex = (): void => {
+  try {
+    const parsed = parseBibTeX(bibtexText.value)
+    for (const ref of parsed) {
+      const { id, ...rest } = ref
+      citationManager.addReference({ ...rest, id })
+    }
+    refreshReferences()
+  } catch (error) {
+    console.error('[F2.3] Error al importar BibTeX:', error)
+  }
+}
+
+const importCslJson = (): void => {
+  let data: unknown
+  try {
+    data = JSON.parse(cslJsonText.value)
+  } catch (error) {
+    console.error('[F2.3] CSL-JSON inválido:', error)
+    return
+  }
+
+  const arr = Array.isArray(data) ? data : [data]
+  const refs = fromCslJson(arr as any[])
+
+  for (const ref of refs) {
+    const { id, ...rest } = ref
+    citationManager.addReference({ ...rest, id })
+  }
+
+  refreshReferences()
+}
+
 // --------- helpers F2.2: bloques y paginación ---------------------
 
-/**
- * Divide un bloque <pre><code> muy largo en sub-bloques
- * de ~5 líneas para que se repartan mejor entre páginas.
- */
 function splitLongPreElement(el: HTMLElement): string[] {
   const codeEl = el.querySelector('code')
   const text = codeEl?.textContent ?? el.textContent ?? ''
   const lines = text.split('\n')
 
-  const LINES_PER_CHUNK = 5
-  const result: string[] = []
-  const tempDiv = document.createElement('div')
-
-  for (let i = 0; i < lines.length; i += LINES_PER_CHUNK) {
-    const pre = document.createElement('pre')
-    for (const attr of Array.from(el.attributes)) {
-      pre.setAttribute(attr.name, attr.value)
-    }
-
-    const code = document.createElement('code')
-    if (codeEl) {
-      for (const attr of Array.from(codeEl.attributes)) {
-        code.setAttribute(attr.name, attr.value)
-      }
-    }
-    code.textContent = lines.slice(i, i + LINES_PER_CHUNK).join('\n')
-    pre.appendChild(code)
-
-    tempDiv.innerHTML = ''
-    tempDiv.appendChild(pre)
-    result.push(tempDiv.innerHTML)
+  if (lines.length <= 10) {
+    return [el.outerHTML]
   }
 
-  return result
+  const chunks: string[] = []
+  const chunkSize = 10
+
+  for (let i = 0; i < lines.length; i += chunkSize) {
+    const slice = lines.slice(i, i + chunkSize).join('\n')
+    const wrapper = document.createElement('pre')
+    const code = document.createElement('code')
+    code.textContent = slice
+    wrapper.appendChild(code)
+    for (const attr of Array.from(el.attributes)) {
+      wrapper.setAttribute(attr.name, attr.value)
+    }
+    chunks.push(wrapper.outerHTML)
+  }
+
+  return chunks
 }
 
-/**
- * Preprocesa el HTML en una lista de “bloques paginables”.
- * - Cada nodo de nivel superior es un bloque.
- * - Si un bloque <pre><code> es muy largo, se divide en sub-bloques.
- */
-function extractBlocks(html: string): string[] {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
-  const blocks: string[] = []
-  const tempDiv = document.createElement('div')
+function splitHtmlIntoBlocks(html: string): string[] {
+  if (!html.trim()) return []
 
-  doc.body.childNodes.forEach((node) => {
+  const container = document.createElement('div')
+  container.innerHTML = html
+
+  const blocks: string[] = []
+  const blockSelectors = [
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'pre',
+    'table',
+    'blockquote',
+    'hr',
+    'div',
+    'section',
+    'figure',
+  ]
+
+  Array.from(container.childNodes).forEach((node) => {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement
 
-      if (el.tagName === 'PRE') {
-        const codeText = el.textContent ?? ''
-        if (codeText.length > 800) {
-          const parts = splitLongPreElement(el)
-          for (const part of parts) {
-            blocks.push(part)
-          }
-          return
-        }
-      }
-
-      if (el.outerHTML.trim()) {
+      if (el.matches('pre')) {
+        const chunks = splitLongPreElement(el)
+        blocks.push(...chunks)
+      } else if (blockSelectors.some((sel) => el.matches(sel))) {
+        blocks.push(el.outerHTML)
+      } else {
         blocks.push(el.outerHTML)
       }
     } else if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim()
-      if (text) {
-        tempDiv.innerHTML = ''
+      const trimmed = (node.textContent ?? '').trim()
+      if (trimmed) {
         const p = document.createElement('p')
-        p.textContent = text
-        tempDiv.appendChild(p)
-        blocks.push(tempDiv.innerHTML)
+        p.textContent = trimmed
+        blocks.push(p.outerHTML)
       }
     }
   })
@@ -235,30 +678,16 @@ function extractBlocks(html: string): string[] {
   return blocks
 }
 
-/**
- * F2.2 — paginación basada en altura fija de página.
- */
-function paginateHtml(html: string): Page[] {
-  if (!html) {
+function paginateHtml(html: string, host: HTMLElement, maxHeight: number): Page[] {
+  if (!html.trim()) {
     return [{ index: 0, html: '' }]
   }
 
-  const host = pageMeasure.value
-  if (!host) {
-    return [{ index: 0, html }]
-  }
-
-  const blocks = extractBlocks(html)
-  if (!blocks.length) {
-    return [{ index: 0, html }]
-  }
-
-  const maxHeight = PAGE_HEIGHT_PX
+  const blocks = splitHtmlIntoBlocks(html)
   const result: Page[] = []
-  let pageIndex = 0
-  let currentBlocks: string[] = []
 
-  host.innerHTML = ''
+  let currentBlocks: string[] = []
+  let pageIndex = 0
 
   for (const block of blocks) {
     host.innerHTML = currentBlocks.join('') + block
@@ -269,7 +698,6 @@ function paginateHtml(html: string): Page[] {
       continue
     }
 
-    // cerrar página anterior
     host.innerHTML = currentBlocks.join('')
     const pageHtml = host.innerHTML
 
@@ -277,12 +705,10 @@ function paginateHtml(html: string): Page[] {
       result.push({ index: pageIndex++, html: pageHtml })
     }
 
-    // iniciar nueva página con el bloque actual
     currentBlocks = [block]
     host.innerHTML = block
   }
 
-  // última página
   if (currentBlocks.length) {
     host.innerHTML = currentBlocks.join('')
     const pageHtml = host.innerHTML
@@ -291,65 +717,88 @@ function paginateHtml(html: string): Page[] {
     }
   }
 
-  host.innerHTML = ''
-
-  // eliminar páginas totalmente vacías, por seguridad
-  return result.filter(
-    (p) => p.html.replace(/<[^>]+>/g, '').trim().length > 0,
-  )
+  return result
 }
 
-function rebuildPages(): void {
-  if (!editor) return
-  const html = editor.getHTML()
-  pages.value = paginateHtml(html)
-}
-
-function togglePagedPreview(): void {
-  isPagedPreview.value = !isPagedPreview.value
-  if (isPagedPreview.value) {
-    rebuildPages()
+function recomputePages() {
+  if (!editor || !isPagedPreview.value) {
+    pages.value = []
+    return
   }
+
+  const html = editor.getHTML()
+  const host = pageMeasure.value
+
+  if (!host) {
+    pages.value = [{ index: 0, html }]
+    return
+  }
+
+  const computed = paginateHtml(html, host, PAGE_HEIGHT_PX)
+  pages.value = computed
 }
 
-// ---------- stats + hook a paginación -----------------------------
+// ---------- estadísticas F2 (palabras, párrafos, etc.) ------------
 
-const updateStats = (): void => {
+function updateStats() {
   if (!editor) return
-  const text = editor.getText()
-  const tokens = text.match(/[\p{L}\p{N}]+/gu) ?? []
-  stats.words = tokens.length
-  stats.paragraphs = editor.state.doc.childCount
 
-  const { $from } = editor.state.selection
-  let currentParagraphNode: any = null
-  for (let i = $from.depth; i >= 0; i--) {
-    const node = $from.node(i)
-    if (node.type.name === 'paragraph') {
-      currentParagraphNode = node
-      break
+  const json = editor.getJSON()
+  let totalWords = 0
+  let paragraphs = 0
+
+  const cursorPos = editor.state.selection.from
+  let wordsInCurrentParagraph = 0
+  let linesInCurrentParagraph = 0
+
+  function countWords(text: string): number {
+    const cleaned = text
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim()
+    if (!cleaned) return 0
+    return cleaned.split(/\s+/).length
+  }
+
+  function traverse(node: any, fromPos: { value: number }) {
+    if (!node) return
+
+    if (node.type === 'paragraph') {
+      paragraphs += 1
+
+      const text = (node.content || [])
+        .filter((child: any) => child.type === 'text')
+        .map((child: any) => child.text || '')
+        .join('')
+
+      const wordCount = countWords(text)
+      totalWords += wordCount
+
+      const startPos = fromPos.value
+      const endPos = startPos + text.length
+
+      if (cursorPos >= startPos && cursorPos <= endPos) {
+        wordsInCurrentParagraph = wordCount
+        linesInCurrentParagraph = Math.max(1, Math.ceil(text.length / 80))
+      }
+
+      fromPos.value = endPos + 1
+    } else if (Array.isArray(node.content)) {
+      for (const child of node.content) {
+        traverse(child, fromPos)
+      }
     }
   }
 
-  if (currentParagraphNode) {
-    const paraText = currentParagraphNode.textContent
-    stats.wordsInCurrentParagraph =
-      paraText.match(/[\p{L}\p{N}]+/gu)?.length || 0
-    stats.linesInCurrentParagraph = Math.max(
-      1,
-      Math.ceil(paraText.length / 80),
-    )
-  } else {
-    stats.wordsInCurrentParagraph = 0
-    stats.linesInCurrentParagraph = 0
-  }
+  traverse(json, { value: 0 })
 
-  if (isPagedPreview.value) {
-    rebuildPages()
-  }
+  stats.words = totalWords
+  stats.paragraphs = paragraphs
+  stats.wordsInCurrentParagraph = wordsInCurrentParagraph
+  stats.linesInCurrentParagraph = linesInCurrentParagraph
 }
 
-// ---------- ciclo de vida -----------------------------------------
+// ---------------- ciclo de vida del editor ------------------------
 
 onMounted(() => {
   try {
@@ -373,25 +822,71 @@ onMounted(() => {
           Dicom,
           GeoSpatial,
           Slides,
+          CitationInline.configure({
+            getReferenceById: (id: string) => citationManager.getReference(id),
+            getCurrentStyle: () => currentCitationStyle.value,
+            formatter: defaultCitationFormatter,
+          }),
+          Bibliography.configure({
+            getReferences: () => citationManager.listReferences(),
+            getCurrentStyle: () => currentCitationStyle.value,
+            formatter: defaultCitationFormatter,
+          }),
         ],
         content:
           '<p>Prueba F2: inserta KaTeX, código, Mermaid, tabla, ..., CAD, DICOM, GeoSpatial o Slides desde la barra inferior.</p>',
       }),
     )
 
-    editor.on('update', updateStats)
-    updateStats()
+    // Hacer visible el editor en window para inspección en consola
     ;(window as any).editor = editor
+
+    editor.on('update', () => {
+      updateStats()
+      if (isPagedPreview.value) {
+        recomputePages()
+      }
+    })
+
+    editor.on('selectionUpdate', updateStats)
+
+    if (isPagedPreview.value) {
+      recomputePages()
+    }
+
+    refreshReferences()
   } catch (error) {
-    console.error('[F2] Error al crear el editor:', error)
+    console.error('[F2] Error al inicializar el editor:', error)
   }
 })
 
 onUnmounted(() => {
-  editor?.destroy()
+  if (editor) {
+    editor.destroy()
+    editor = null
+    ;(window as any).editor = null
+  }
 })
 
-// ---------- comandos toolbar (sin cambios funcionales) ------------
+// --------------------- acciones de UI -----------------------------
+
+const togglePagedPreview = (): void => {
+  isPagedPreview.value = !isPagedPreview.value
+  if (isPagedPreview.value) {
+    recomputePages()
+  }
+}
+
+const toggleReferencesPanel = (): void => {
+  showReferencesPanel.value = !showReferencesPanel.value
+  if (showReferencesPanel.value) {
+    refreshReferences()
+  } else {
+    cancelEditReference()
+  }
+}
+
+// ---------- comandos toolbar (F2) ---------------------------------
 
 const insertKatex = (): void => {
   if (!editor) return
@@ -405,28 +900,22 @@ const insertKatex = (): void => {
 const insertMermaid = (): void => {
   if (!editor) return
   const diagram = `graph TD
-  A[Inicio] --> B{Decisión}
+  A[Inicio] --> B{Decision}
   B -->|Sí| C[Camino 1]
-  B -->|No| D[Camino 2]`
-
+  B -->|No| D[Camino 2]
+`
   editor
     .chain()
     .focus()
-    .setMermaid({ content: diagram })
+    .setMermaid({
+      code: diagram,
+    })
     .run()
 }
 
 const insertCodeBlock = (): void => {
   if (!editor) return
-  editor
-    .chain()
-    .focus()
-    .setPrism({
-      language: 'javascript',
-      content:
-        '// Código de ejemplo\nfunction hola() {\n  console.log("Hola Disertare");\n}\n',
-    })
-    .run()
+  editor.chain().focus().setCodeBlock().run()
 }
 
 const insertTable = (): void => {
@@ -470,44 +959,16 @@ const insertImage = (): void => {
 
 const insertGantt = (): void => {
   if (!editor) return
-
-  const anyEditor = editor as any
-  const chain = anyEditor.chain().focus() as any
-
-  const sampleData =
-    'Tarea A,2025-11-10,5\n' +
-    'Tarea B,2025-11-12,3\n' +
-    'Tarea C,2025-11-15,4'
-
-  if (chain.setGantt) {
-    chain
-      .setGantt({
-        mode: 'gantt',
-        content: sampleData,
-      })
-      .run()
-    return
-  }
-
-  if (anyEditor.commands?.setGantt) {
-    anyEditor.commands.setGantt({
-      mode: 'gantt',
-      content: sampleData,
+  editor
+    .chain()
+    .focus()
+    .setGantt({
+      tasks: [
+        { id: '1', name: 'Tarea 1', start: '2025-01-01', end: '2025-01-07' },
+        { id: '2', name: 'Tarea 2', start: '2025-01-08', end: '2025-01-15' },
+      ],
     })
-    return
-  }
-
-  if (anyEditor.commands?.insertGantt) {
-    anyEditor.commands.insertGantt({
-      mode: 'gantt',
-      content: sampleData,
-    })
-    return
-  }
-
-  console.warn(
-    '[F2] No se encontró ningún comando de Gantt (setGantt / insertGantt) en editor.commands/chain.',
-  )
+    .run()
 }
 
 const insertCad = (): void => {
@@ -516,10 +977,8 @@ const insertCad = (): void => {
     .chain()
     .focus()
     .setCad({
-      src: 'https://example.com/path-to-cad.dxf',
+      src: 'https://example.com/archivo.dwg',
       title: 'Modelo CAD de ejemplo',
-      width: '400px',
-      height: '300px',
     })
     .run()
 }
@@ -530,10 +989,8 @@ const insertDicom = (): void => {
     .chain()
     .focus()
     .setDicom({
-      src: 'https://example.com/path-to-dicom.dcm',
-      title: 'Imagen DICOM de ejemplo',
-      width: '400px',
-      height: '300px',
+      src: 'https://example.com/estudio.dcm',
+      title: 'Estudio DICOM de ejemplo',
     })
     .run()
 }
@@ -544,10 +1001,11 @@ const insertGeoSpatial = (): void => {
     .chain()
     .focus()
     .setGeoSpatial({
-      geoJson: '{}',
-      title: 'Mapa GeoSpatial de ejemplo',
-      width: '400px',
-      height: '300px',
+      geojson: {
+        type: 'FeatureCollection',
+        features: [],
+      },
+      title: 'Capa geoespacial de ejemplo',
     })
     .run()
 }
@@ -565,9 +1023,77 @@ const insertSlides = (): void => {
     })
     .run()
 }
+
+// --------- F2.3: comandos para citas y bibliografía ---------------
+
+const insertCitation = (): void => {
+  if (!editor) return
+
+  const currentRefs = citationManager.listReferences()
+  if (currentRefs.length === 0) {
+    showReferencesPanel.value = true
+    return
+  }
+
+  const refId = currentRefs[0].id
+
+  editor
+    .chain()
+    .focus()
+    .insertCitation({
+      refId,
+      locator: null,
+      prefix: null,
+      suffix: null,
+    })
+    .run()
+}
+
+const insertBibliographyBlock = (): void => {
+  if (!editor) return
+
+  const { state } = editor
+  const type = state.schema.nodes['bibliography']
+
+  if (!type) {
+    console.warn('[F2.3] Nodo bibliography no encontrado en el schema.')
+    return
+  }
+
+  let foundPos: number | null = null
+
+  state.doc.descendants((node, pos) => {
+    if (node.type === type && foundPos === null) {
+      foundPos = pos
+      return false
+    }
+    return true
+  })
+
+  if (foundPos != null) {
+    // Ya hay bibliografía: seleccionamos el nodo de bloque
+    editor
+      .chain()
+      .focus()
+      .setNodeSelection(foundPos)
+      .run()
+    return
+  }
+
+  // No hay bibliografía: insertamos una nueva
+  editor
+    .chain()
+    .focus()
+    .insertBibliography({
+      style: currentCitationStyle.value,
+      title: 'Referencias',
+    })
+    .run()
+}
 </script>
 
 <style scoped>
+/* estilos igual que antes, sin cambios */
 .editor-container {
   --purple-fade: #e0d6ff33;
   --ruler-size: 20px;
@@ -582,8 +1108,8 @@ const insertSlides = (): void => {
   background: repeating-linear-gradient(
     to right,
     var(--purple-fade),
-    var(--purple-fade) 4px,
-    transparent 4px,
+    var(--purple-fade) 10px,
+    transparent 10px,
     transparent 20px
   );
   border-bottom: 1px solid var(--purple-fade);
@@ -600,48 +1126,114 @@ const insertSlides = (): void => {
   background: repeating-linear-gradient(
     to bottom,
     var(--purple-fade),
-    var(--purple-fade) 4px,
-    transparent 4px,
+    var(--purple-fade) 10px,
+    transparent 10px,
     transparent 20px
   );
   border-right: 1px solid var(--purple-fade);
 }
 
 .editor-content {
-  overflow: auto;
-  padding: 16px;
-  height: 100%;
-  box-sizing: border-box;
   position: relative;
+  overflow: auto;
+  padding: 24px;
+  background: #f5f3ff;
 }
 
-/* Contenedor oculto para medición de altura (usa mismas dimensiones que la hoja) */
+/* Contenedor oculto para mediciones (F2.2) */
 .page-measure {
   position: absolute;
-  left: -99999px;
-  top: 0;
-  width: var(--disertare-page-width, 794px);
-  padding: var(--disertare-page-padding, 32px 40px);
   visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+  inset: 0;
+  max-width: var(--disertare-page-width, 794px);
+  padding: var(--disertare-page-padding, 32px 40px);
+  box-sizing: border-box;
 }
 
-/* Paneles de vista */
+/* Paneles del editor */
 .editor-pane {
-  min-height: calc(100% - 2rem);
+  max-width: var(--disertare-page-width, 794px);
+  margin: 0 auto;
 }
 
+/* Vista continua */
 .editor-pane--continuous {
   background: #ffffff;
-  padding: 16px;
+  padding: 24px 32px;
   border-radius: 4px;
-  box-shadow: 0 0 0 1px var(--purple-fade);
+  box-shadow:
+    0 0 0 1px var(--purple-fade),
+    0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
+/* Vista paginada F2.2 */
 .editor-pane--paged {
-  background: transparent;
+  padding: 16px 0 32px;
 }
 
-/* Contenedor de páginas F2.2 */
+/* Toolbar inferior */
+.editor-toolbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid #e0d6ff;
+  background: #f9f7ff;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.editor-toolbar-secondary {
+  display: flex;
+  gap: 8px;
+}
+
+/* Botones de toolbar */
+.editor-toolbar button,
+.editor-toolbar-secondary .toolbar-toggle {
+  border: 1px solid #d3cfff;
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #4b3f72;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.editor-toolbar button:hover,
+.editor-toolbar-secondary .toolbar-toggle:hover {
+  background: #f3ecff;
+  border-color: #c1b6ff;
+  box-shadow: 0 0 0 1px #d3cfff;
+}
+
+.toolbar-toggle {
+  font-weight: 600;
+}
+
+/* Info bar inferior */
+.editor-info-bar {
+  display: flex;
+  gap: 16px;
+  padding: 4px 16px 8px;
+  font-size: 12px;
+  color: #5f4b8b;
+  background: #f2efff;
+  border-top: 1px solid #e0d6ff;
+}
+
+/* Vista de páginas (F2.2) */
 .page-preview-container {
   display: flex;
   flex-direction: column;
@@ -673,47 +1265,74 @@ const insertSlides = (): void => {
   font-size: 11px;
   text-align: right;
   color: #6a5af9;
-  border-top: 1px solid #eee9ff;
-  background: #f9f6ff;
 }
 
-/* Toolbar inferior */
-.editor-toolbar {
-  position: sticky;
-  bottom: 0;
-  background: var(--purple-fade);
-  padding: 4px;
-  display: flex;
-  gap: 4px;
-  border-top: 1px solid var(--purple-fade);
+/* Estilos básicos del contenido ProseMirror */
+.ProseMirror {
+  outline: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  line-height: 1.6;
+  font-size: 15px;
 }
 
-.editor-toolbar button {
-  padding: 4px 8px;
-  font-size: 12px;
-  background: #e0d6ff33;
-  border: 1px solid #6a5f9444;
-  border-radius: 4px;
-  cursor: pointer;
+/* Párrafos y encabezados */
+.ProseMirror p {
+  margin: 0 0 0.75em;
 }
 
-.editor-toolbar button:hover {
-  background: #6a5af922;
-}
-
-.toolbar-toggle {
-  margin-left: auto;
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  margin: 1.5em 0 0.5em;
   font-weight: 600;
+  line-height: 1.3;
 }
 
-/* Barra de info */
-.editor-info-bar {
-  display: flex;
-  gap: 16px;
-  padding: 4px 12px;
-  background: var(--purple-fade);
-  font-family: 'Atkinson Hyperlegible', sans-serif;
+.ProseMirror h1 {
+  font-size: 28px;
+}
+.ProseMirror h2 {
+  font-size: 24px;
+}
+.ProseMirror h3 {
+  font-size: 20px;
+}
+.ProseMirror h4 {
+  font-size: 18px;
+}
+.ProseMirror h5 {
+  font-size: 16px;
+}
+.ProseMirror h6 {
+  font-size: 14px;
+}
+
+/* Listas */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+/* Código */
+.ProseMirror pre {
+  background: #1e1e1e;
+  color: #f8f8f2;
+  padding: 12px 14px;
+  border-radius: 4px;
+  overflow-x: auto;
   font-size: 13px;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* KaTeX */
+.katex-display {
+  margin: 1em 0;
 }
 
 /* Tablas F2.1 */
@@ -729,8 +1348,8 @@ const insertSlides = (): void => {
 .ProseMirror .disertare-table th,
 .ProseMirror .disertare-table td {
   border: 1px solid #d3cfff;
-  padding: 4px 6px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 13px;
 }
 
 .ProseMirror th,
@@ -747,5 +1366,213 @@ const insertSlides = (): void => {
 .ProseMirror .selectedCell {
   outline: 2px solid #ff9800;
   outline-offset: -2px;
+}
+
+.dsr-citation-inline {
+  padding: 0 2px;
+  border-radius: 2px;
+  background: #f3ecff;
+  color: #6a5af9;
+  font-size: 0.85em;
+}
+
+.dsr-bibliography {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0d6ff;
+}
+
+.dsr-bibliography__title {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #3c366b;
+}
+
+.dsr-bibliography__list {
+  padding-left: 20px;
+  margin: 0;
+}
+
+/* Panel de referencias */
+.references-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 72px;
+  width: 320px;
+  max-height: 60vh;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px #e0d6ff,
+    0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 50;
+  font-size: 13px;
+}
+
+.references-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.references-panel__close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+  color: #6a5af9;
+}
+
+.references-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.references-panel__row-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b3f72;
+}
+
+.references-panel__row label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.references-panel__row input,
+.references-panel__row select {
+  border-radius: 4px;
+  border: 1px solid #d3cfff;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.references-panel__new-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.references-panel__new-actions button,
+.references-panel__item button {
+  border-radius: 4px;
+  border: 1px solid #d3cfff;
+  background: #f3ecff;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.references-panel__secondary {
+  background: #ffffff;
+}
+
+.references-panel__list {
+  margin-top: 4px;
+  border-top: 1px solid #f1ecff;
+  padding-top: 4px;
+  overflow-y: auto;
+}
+
+.references-panel__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed #f1ecff;
+}
+
+.references-panel__item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.references-panel__item-title {
+  font-weight: 600;
+  color: #3c366b;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.references-panel__item-meta {
+  font-size: 11px;
+  color: #6b6b8f;
+}
+
+.references-panel__item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.references-panel__delete {
+  background: #ffecec;
+  border-color: #ffc5c5;
+  color: #c53030;
+}
+
+.references-panel__empty {
+  font-size: 12px;
+  color: #7a7399;
+  margin: 4px 0 0;
+}
+
+/* Import/Export BibTeX / CSL */
+.references-panel__import {
+  margin-top: 6px;
+  border-top: 1px solid #f1ecff;
+  padding-top: 4px;
+}
+
+.references-panel__import summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #4b3f72;
+}
+
+.references-panel__import-section {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.references-panel__import textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid #d3cfff;
+  padding: 4px 6px;
+}
+
+.references-panel__import-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.references-panel__import-actions button {
+  border-radius: 4px;
+  border: 1px solid #d3cfff;
+  background: #f3ecff;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
 }
 </style>
