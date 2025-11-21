@@ -24,6 +24,7 @@ import {
   defaultCitationFormatter,
 } from '@disertare/editor-citations'
 import type { CitationStyleId } from '@disertare/editor-citations'
+import { OcrExtension as Ocr } from '@disertare/editor-ext-ocr'
 
 export interface UseDisertareEditorOptions {
   editor: Ref<Editor | null>
@@ -37,11 +38,11 @@ export interface UseDisertareEditorOptions {
 }
 
 /**
- * F2 / F2.2 / F2.3.R
+ * F2 / F2.2 / F2.3.R / F2.4
  * Instancia y configura el editor TipTap de Disertare.
  * Encapsula:
  *  - Extensiones base (StarterKit, tablas, código, etc.).
- *  - Extensiones avanzadas (Gantt, CAD, DICOM, Geo, Slides).
+ *  - Extensiones avanzadas (Gantt, CAD, DICOM, Geo, Slides, OCR).
  *  - Citas y bibliografía (CitationInline + Bibliography).
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
@@ -66,6 +67,10 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Dicom,
           GeoSpatial,
           Slides,
+          // F2.4: extensión OCR (on-device, motor definido en @disertare/editor-ext-ocr)
+          Ocr.configure({
+            defaultLang: 'es',
+          }),
           CitationInline.configure({
             getReferenceById: (id: string) =>
             options.citationManager.getReference(id),

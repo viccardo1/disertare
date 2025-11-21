@@ -8,12 +8,21 @@
     >
       Gestor de citas
     </button>
+
     <button
       type="button"
       class="toolbar-toggle"
       @click="emit('toggle-paged-preview')"
     >
       {{ isPagedPreview ? 'Vista continua' : 'Vista paginada 1:1' }}
+    </button>
+
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-ocr-panel')"
+    >
+      OCR
     </button>
   </div>
 </template>
@@ -26,6 +35,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'toggle-references'): void
   (e: 'toggle-paged-preview'): void
+  (e: 'toggle-ocr-panel'): void
 }>()
 
 const isPagedPreview = props.isPagedPreview

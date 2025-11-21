@@ -1,205 +1,82 @@
-// packages/editor-ext-tables/src/index.ts
-import { Node, mergeAttributes } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Table as TiptapTable } from '@tiptap/extension-table'
+import TableRowBase from '@tiptap/extension-table-row'
+import TableHeaderBase from '@tiptap/extension-table-header'
+import TableCellBase from '@tiptap/extension-table-cell'
+import type { NodeViewRenderer } from '@tiptap/core'
 import { TableNodeView } from './TableNodeView'
 
-// === 1. Nodo principal: Table ===
-export const Table = Node.create({
-  name: 'table',
-  group: 'block',                // ✅ ahora el doc lo acepta como bloque
-  content: 'tableRow+',
-  tableRole: 'table',
-  isolating: true,
-  selectable: true,
-  draggable: true,
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    }
-  },
+/**
+ * Nodo principal de tabla.
+ *
+ * Mantiene el nombre de exportación `Table` porque así lo importa Editor.vue:
+ *
+ *   import { Table } from '@disertare/editor-ext-tables'
+ */
+export const Table = TiptapTable.extend({
+  group: 'block',
 
   addAttributes() {
     return {
-      hasHeader: {
-        default: true,
-          parseHTML: element =>
-          element.getAttribute('data-has-header') !== 'false',
-                                 renderHTML: attributes => ({
-                                   'data-has-header': attributes.hasHeader ? 'true' : 'false',
-                                 }),
-      },
-      rows: {
-        default: 3,
-          parseHTML: element => {
-            const value = element.getAttribute('data-rows')
-            return value ? parseInt(value, 10) || 3 : 3
-          },
-          renderHTML: attributes => ({
-            'data-rows': attributes.rows,
-          }),
-      },
-      cols: {
-        default: 3,
-          parseHTML: element => {
-            const value = element.getAttribute('data-cols')
-            return value ? parseInt(value, 10) || 3 : 3
-          },
-          renderHTML: attributes => ({
-            'data-cols': attributes.cols,
-          }),
-      },
+      ...this.parent?.(),
+                                        rows: {
+                                          default: 3,
+                                        },
+                                        cols: {
+                                          default: 3,
+                                        },
+                                        hasHeader: {
+                                          default: true,
+                                        },
     }
   },
 
-  parseHTML() {
-    return [
-      {
-        tag: 'table[data-disertare-table]',
-      },
-    ]
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'table',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-        'data-disertare-table': '',
-      }),
-      0,
-    ]
-  },
-
-  addCommands() {
-    return {
-      setTable:
-      (attrs?: { rows?: number; cols?: number; hasHeader?: boolean }) =>
-      ({ chain }) => {
-        const rows = attrs?.rows ?? 3
-        const cols = attrs?.cols ?? 3
-        const hasHeader = attrs?.hasHeader ?? true
-
-        const content: any[] = []
-
-        for (let i = 0; i < rows; i++) {
-          const cells: any[] = []
-
-          for (let j = 0; j < cols; j++) {
-            const cellContent = [{ type: 'text', text: ' ' }]
-
-            // Fila 0 con encabezado → tableHeader
-            if (i === 0 && hasHeader) {
-              cells.push({ type: 'tableHeader', content: cellContent })
-            } else {
-              cells.push({ type: 'tableCell', content: cellContent })
-            }
-          }
-
-          content.push({
-            type: 'tableRow',
-            content: cells,
-          })
-        }
-
-        return chain()
-        .insertContent({
-          type: this.name,
-          attrs: { hasHeader, rows, cols }, // ✅ guardamos filas/cols en attrs
-          content,
-        })
-        .run()
-      },
-    }
-  },
-
-  addNodeView() {
+  addNodeView(): NodeViewRenderer {
     return TableNodeView
   },
+})
 
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey('tablePasteHandler'),
-                 props: {
-                   handlePaste(view, event) {
-                     const text = event.clipboardData?.getData('text/plain')
-                     if (!text || !/[,;\t]/.test(text)) return false
+/**
+ * Fila y encabezado se dejan sin cambios por ahora.
+ * Si más adelante se quieren attrs extra, se pueden extender aquí.
+ */
+export const TableRow = TableRowBase
+export const TableHeader = TableHeaderBase
 
-                       const lines = text.trim().split(/\r?\n/)
-                       const rows = lines.map(line => line.split(/[,;\t]/))
-                       if (rows.length < 2) return false
-
-                         const { schema, dispatch } = view.state
-                         const tableContent = rows.map(row => {
-                           const cells = row.map(cell =>
-                           schema.nodes.tableCell.createChecked({}, [
-                             schema.text((cell ?? '').trim() || ' '),
-                           ]),
-                           )
-                           return schema.nodes.tableRow.createChecked({}, cells)
-                         })
-
-                         const tableNode = schema.nodes.table.createChecked(
-                           {
-                             // podrías llenar attrs aquí si quieres
-                           },
-                           tableContent,
-                         )
-
-                         const tr = view.state.tr.replaceSelectionWith(tableNode)
-                         dispatch(tr)
-                         event.preventDefault()
-                         return true
-                   },
-                 },
-      }),
-    ]
+/**
+ * Celda de tabla extendida con attrs para F2.1:
+ * - formula: string | null → fórmula original (si empieza con "=")
+ * - value:   string | null → valor calculado o literal
+ * - error:   string | null → código de error tipo "#REF!", "#DIV/0!", etc.
+ *
+ * Las tablas sin fórmulas siguen funcionando porque estos attrs
+ * son opcionales y con default null.
+ */
+export const TableCell = TableCellBase.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+                                              formula: {
+                                          default: null,
+                                              },
+                                              value: {
+                                          default: null,
+                                              },
+                                              error: {
+                                          default: null,
+                                              },
+    }
   },
 })
 
-// === 2. Nodo: TableRow ===
-export const TableRow = Node.create({
-  name: 'tableRow',
-  content: '(tableCell | tableHeader)*',
-                                    tableRole: 'row',
-
-                                    parseHTML() {
-                                      return [{ tag: 'tr' }]
-                                    },
-
-                                    renderHTML() {
-                                      return ['tr', 0]
-                                    },
-})
-
-// === 3. Nodo: TableHeader ===
-export const TableHeader = Node.create({
-  name: 'tableHeader',
-  content: 'text*',
-  tableRole: 'header_cell',
-  isolating: true,
-
-  parseHTML() {
-    return [{ tag: 'th' }]
-  },
-
-  renderHTML() {
-    return ['th', 0]
-  },
-})
-
-// === 4. Nodo: TableCell ===
-export const TableCell = Node.create({
-  name: 'tableCell',
-  content: 'text*',
-  tableRole: 'cell',
-  isolating: true,
-
-  parseHTML() {
-    return [{ tag: 'td' }]
-  },
-
-  renderHTML() {
-    return ['td', 0]
-  },
-})
+/**
+ * Export por defecto conveniente si quieres registrar todo el paquete
+ * de golpe en el Editor:
+ *
+ *   import TablesExtensions from '@disertare/editor-ext-tables'
+ *   ...
+ *   extensions: [
+ *     StarterKit,
+ *     ...TablesExtensions,
+ *   ]
+ */
+export default [Table, TableRow, TableHeader, TableCell]

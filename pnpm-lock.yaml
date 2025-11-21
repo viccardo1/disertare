@@ -70,6 +70,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@disertare/editor-citations':
+        specifier: workspace:^
+        version: link:../../packages/editor-citations
       '@disertare/editor-core':
         specifier: workspace:^
         version: link:../../packages/editor-core
@@ -137,6 +140,18 @@ importers:
       vue-tsc:
         specifier: 2.2.12
         version: 2.2.12(typescript@5.9.3)
+
+  packages/editor-citations:
+    dependencies:
+      '@disertare/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@tiptap/core':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/pm':
+        specifier: 3.10.2
+        version: 3.10.2
 
   packages/editor-core:
     dependencies:

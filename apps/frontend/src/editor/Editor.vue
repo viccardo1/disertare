@@ -20,6 +20,12 @@
           @insert-citation="insertCitationFor"
         />
 
+        <!-- Panel OCR (F2.4) -->
+        <EditorOcrPanel
+          v-if="showOcrPanel"
+          :editor="editor"
+        />
+
         <!-- Vista CONTINUA (edición normal) -->
         <div
           v-if="editor && !isPagedPreview"
@@ -56,6 +62,7 @@
           :is-paged-preview="isPagedPreview"
           @toggle-references="toggleReferencesPanel"
           @toggle-paged-preview="togglePagedPreview"
+          @toggle-ocr-panel="toggleOcrPanel"
         />
       </div>
     </div>
@@ -80,6 +87,7 @@ import { useEditorCommands } from './composables/useEditorCommands'
 
 import EditorPagedPreview from './EditorPagedPreview.vue'
 import EditorReferencesPanel from './EditorReferencesPanel.vue'
+import EditorOcrPanel from './EditorOcrPanel.vue'
 import EditorToolbarPrimary from './EditorToolbarPrimary.vue'
 import EditorToolbarSecondary from './EditorToolbarSecondary.vue'
 import EditorInfoBar from './EditorInfoBar.vue'
@@ -141,7 +149,9 @@ useDisertareEditor({
   },
 })
 
+// Paneles laterales
 const showReferencesPanel = ref(false)
+const showOcrPanel = ref(false)
 
 // --------------------- acciones de UI -----------------------------
 
@@ -153,6 +163,10 @@ const togglePagedPreview = (): void => {
 
 const toggleReferencesPanel = (): void => {
   showReferencesPanel.value = !showReferencesPanel.value
+}
+
+const toggleOcrPanel = (): void => {
+  showOcrPanel.value = !showOcrPanel.value
 }
 
 const onReferencesChanged = (): void => {
