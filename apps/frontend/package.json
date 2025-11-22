@@ -19,6 +19,7 @@
     "@disertare/editor-ext-katex": "workspace:^",
     "@disertare/editor-ext-mermaid": "workspace:^",
     "@disertare/editor-ext-ocr": "workspace:^",
+    "@disertare/editor-ext-page-section": "workspace:^",
     "@disertare/editor-ext-prism": "workspace:^",
     "@disertare/editor-ext-slides": "workspace:^",
     "@disertare/editor-citations": "workspace:^",

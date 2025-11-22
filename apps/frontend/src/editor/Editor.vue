@@ -2,11 +2,12 @@
 <template>
   <div class="editor-container">
     <div class="ruler-horizontal" aria-hidden="true"></div>
+
     <div class="editor-main">
       <div class="ruler-vertical" aria-hidden="true"></div>
 
       <div class="editor-content">
-        <!-- Contenedor oculto para medir altura de contenido (F2.2 / F2.3.R) -->
+        <!-- Contenedor oculto para medir altura de contenido (F2.2 / F2.3.R / F2.5) -->
         <div ref="pageMeasure" class="page-measure" aria-hidden="true"></div>
 
         <!-- Panel de referencias (F2.3) -->
@@ -16,46 +17,50 @@
           v-model:currentCitationStyle="currentCitationStyle"
           :citation-styles="citationStyles"
           @close="toggleReferencesPanel"
-          @references-changed="onReferencesChanged"
-          @insert-citation="insertCitationFor"
+          @references-changed="handleReferencesChanged"
+          @insert-citation="handleInsertCitationFromPanel"
         />
 
-        <!-- Panel OCR (F2.4) -->
+        <!-- Panel de configuración de encabezados / pies (F2.5) -->
+        <EditorPageSectionsPanel v-if="showPageSectionsPanel" />
+
+        <!-- Panel de OCR (F2.4) -->
         <EditorOcrPanel
           v-if="showOcrPanel"
           :editor="editor"
         />
 
-        <!-- Vista CONTINUA (edición normal) -->
-        <div
-          v-if="editor && !isPagedPreview"
-          class="editor-pane editor-pane--continuous"
-        >
-          <EditorContent :editor="editor" />
+        <!-- Zona principal de edición -->
+        <div class="editor-pane-wrapper">
+          <EditorPagedPreview
+            v-if="isPagedPreview"
+            :pages="pages"
+          />
+          <div
+            v-else
+            class="editor-pane editor-pane--continuous"
+          >
+            <EditorContent
+              v-if="editor"
+              :editor="editor"
+            />
+          </div>
         </div>
 
-        <!-- Vista PAGINADA 1:1 (F2.2 / F2.3.R) -->
-        <EditorPagedPreview
-          v-if="editor && isPagedPreview"
-          :pages="pages"
-        />
-      </div>
-
-      <!-- Barra inferior de herramientas (F2) -->
-      <div class="editor-toolbar-container">
+        <!-- Toolbars -->
         <EditorToolbarPrimary
           @insert-katex="insertKatex"
           @insert-mermaid="insertMermaid"
           @insert-code-block="insertCodeBlock"
           @insert-table="insertTable"
-          @insert-citation="handleInsertCitationFromToolbar"
-          @insert-bibliography="insertBibliographyBlock"
           @insert-image="insertImage"
           @insert-gantt="insertGantt"
           @insert-cad="insertCad"
           @insert-dicom="insertDicom"
           @insert-geospatial="insertGeoSpatial"
           @insert-slides="insertSlides"
+          @insert-citation="handleInsertCitationFromToolbar"
+          @insert-bibliography="insertBibliographyBlock"
         />
 
         <EditorToolbarSecondary
@@ -63,6 +68,7 @@
           @toggle-references="toggleReferencesPanel"
           @toggle-paged-preview="togglePagedPreview"
           @toggle-ocr-panel="toggleOcrPanel"
+          @toggle-page-sections-panel="togglePageSectionsPanel"
         />
       </div>
     </div>
@@ -88,27 +94,15 @@ import { useEditorCommands } from './composables/useEditorCommands'
 import EditorPagedPreview from './EditorPagedPreview.vue'
 import EditorReferencesPanel from './EditorReferencesPanel.vue'
 import EditorOcrPanel from './EditorOcrPanel.vue'
+import EditorPageSectionsPanel from './EditorPageSectionsPanel.vue'
 import EditorToolbarPrimary from './EditorToolbarPrimary.vue'
 import EditorToolbarSecondary from './EditorToolbarSecondary.vue'
 import EditorInfoBar from './EditorInfoBar.vue'
 
-// Instancia TipTap compartida
 const editor = ref<Editor | null>(null)
 
-// F2 / F2.2: estadísticas del documento
-const { stats, updateStats } = useEditorStats(() => editor.value)
+// --------------------- citas y bibliografía -----------------------------
 
-// F2.2 / F2.3.R: vista paginada 1:1
-const {
-  isPagedPreview,
-  pages,
-  pageMeasure,
-  recomputePages,
-} = usePagedPreview({
-  getHtml: () => (editor.value ? editor.value.getHTML() : ''),
-})
-
-// F2.3: citas y bibliografía
 const {
   citationManager,
   currentCitationStyle,
@@ -119,7 +113,18 @@ const {
   forceRerenderCitationsAndBibliography,
 } = useEditorCitations(() => editor.value)
 
-// F2: comandos de la toolbar (acciones sobre el editor)
+// --------------------------- estadísticas -------------------------------
+
+const { stats, updateStats } = useEditorStats(() => editor.value)
+
+// ------------------------ vista paginada F2.2 ---------------------------
+
+const { isPagedPreview, pages, pageMeasure, recomputePages } = usePagedPreview({
+  getHtml: () => (editor.value ? editor.value.getHTML() : ''),
+})
+
+// -------------------------- comandos toolbar ----------------------------
+
 const {
   insertKatex,
   insertMermaid,
@@ -133,31 +138,31 @@ const {
   insertSlides,
 } = useEditorCommands(() => editor.value)
 
-// F2: instancia del editor TipTap vía composable
+// --------------------------- inicializar editor -------------------------
+
 useDisertareEditor({
   editor,
   citationManager,
   getCitationStyle: () => currentCitationStyle.value,
   onUpdate: () => {
     updateStats()
-    if (isPagedPreview.value) {
-      recomputePages()
-    }
+    recomputePages()
   },
   onSelectionUpdate: () => {
     updateStats()
   },
 })
 
-// Paneles laterales
+// --------------------------- estado de paneles --------------------------
+
 const showReferencesPanel = ref(false)
 const showOcrPanel = ref(false)
+const showPageSectionsPanel = ref(false)
 
-// --------------------- acciones de UI -----------------------------
+// --------------------------- acciones de UI -----------------------------
 
 const togglePagedPreview = (): void => {
   isPagedPreview.value = !isPagedPreview.value
-  // Recalcular páginas al cambiar de modo
   recomputePages()
 }
 
@@ -169,8 +174,16 @@ const toggleOcrPanel = (): void => {
   showOcrPanel.value = !showOcrPanel.value
 }
 
-const onReferencesChanged = (): void => {
+const togglePageSectionsPanel = (): void => {
+  showPageSectionsPanel.value = !showPageSectionsPanel.value
+}
+
+const handleReferencesChanged = (): void => {
   forceRerenderCitationsAndBibliography()
+}
+
+const handleInsertCitationFromPanel = (refId: string): void => {
+  insertCitationFor(refId)
 }
 
 // La toolbar de "Cita" necesita abrir el panel si no hay refs
@@ -189,99 +202,92 @@ const handleInsertCitationFromToolbar = (): void => {
 </script>
 
 <style scoped>
-/* Layout general y reglas */
 .editor-container {
-  --purple-fade: #e0d6ff33;
-  --ruler-size: 20px;
-
-  display: grid;
-  grid-template-rows: var(--ruler-size) 1fr auto;
-  height: 100%;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  background: #f3f2ff;
 }
 
+/* Reglas (F2.2) */
 .ruler-horizontal {
-  background: repeating-linear-gradient(
+  height: 24px;
+  margin-left: 40px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
     to right,
-    var(--purple-fade),
-    var(--purple-fade) 10px,
-    transparent 10px,
-    transparent 20px
+    #e0d6ff 0,
+    #e0d6ff 1px,
+    transparent 1px,
+    transparent 16px
   );
-  border-bottom: 1px solid var(--purple-fade);
-}
-
-.editor-main {
-  display: grid;
-  grid-template-columns: var(--ruler-size) 1fr;
-  height: 100%;
-  overflow: hidden;
+  background-size: 16px 100%;
+  opacity: 0.7;
 }
 
 .ruler-vertical {
-  background: repeating-linear-gradient(
+  width: 24px;
+  margin-right: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
     to bottom,
-    var(--purple-fade),
-    var(--purple-fade) 10px,
-    transparent 10px,
-    transparent 20px
+    #e0d6ff 0,
+    #e0d6ff 1px,
+    transparent 1px,
+    transparent 16px
   );
-  border-right: 1px solid var(--purple-fade);
+  background-size: 100% 16px;
+  opacity: 0.7;
 }
 
+.editor-main {
+  display: flex;
+  flex: 1;
+}
+
+/* Zona central: paneles + editor */
 .editor-content {
-  position: relative;
-  overflow: auto;
-  padding: 24px;
-  background: #f5f3ff;
+  flex: 1;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 0 8px 16px;
+  box-sizing: border-box;
 }
 
-/* Contenedor oculto para mediciones (F2.2) */
+/* Div oculto que se utiliza para medir el contenido HTML paginado */
 .page-measure {
   position: absolute;
   visibility: hidden;
   pointer-events: none;
   z-index: -1;
-  inset: 0;
   max-width: var(--disertare-page-width, 794px);
-  padding: var(--disertare-page-padding, 32px 40px);
-  box-sizing: border-box;
 }
 
-/* Paneles del editor (continua) */
+/* Contenedor de la página o preview */
+.editor-pane-wrapper {
+  margin-bottom: 12px;
+}
+
+/* Vista continua (no paginada) */
 .editor-pane {
   max-width: var(--disertare-page-width, 794px);
   margin: 0 auto;
-}
-
-/* Vista continua */
-.editor-pane--continuous {
+  padding: var(--disertare-page-padding, 32px 40px);
   background: #ffffff;
-  padding: 24px 32px;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 1px solid #e0d6ff;
   box-shadow:
-    0 0 0 1px var(--purple-fade),
-    0 4px 12px rgba(0, 0, 0, 0.06);
+    0 10px 20px rgba(15, 23, 42, 0.06),
+    0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
-/* Toolbar inferior */
-.editor-toolbar-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 8px 16px;
-  border-top: 1px solid #e0d6ff;
-  background: #f9f7ff;
-}
+/* ---- Estilos base del contenido ProseMirror ---- */
 
-/* Estilos básicos del contenido ProseMirror */
 .ProseMirror {
   outline: none;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
-  line-height: 1.6;
-  font-size: 15px;
 }
 
 /* Párrafos y encabezados */
@@ -297,92 +303,71 @@ const handleInsertCitationFromToolbar = (): void => {
 .ProseMirror h6 {
   margin: 1.5em 0 0.5em;
   font-weight: 600;
-  line-height: 1.3;
-}
-
-.ProseMirror h1 {
-  font-size: 28px;
-}
-.ProseMirror h2 {
-  font-size: 24px;
-}
-.ProseMirror h3 {
-  font-size: 20px;
-}
-.ProseMirror h4 {
-  font-size: 18px;
-}
-.ProseMirror h5 {
-  font-size: 16px;
-}
-.ProseMirror h6 {
-  font-size: 14px;
+  line-height: 1.2;
 }
 
 /* Listas */
 .ProseMirror ul,
 .ProseMirror ol {
   padding-left: 1.5em;
-  margin: 0.5em 0;
+  margin: 0 0 0.75em;
 }
 
-/* Código */
-.ProseMirror pre {
-  background: #1e1e1e;
-  color: #f8f8f2;
-  padding: 12px 14px;
-  border-radius: 4px;
-  overflow-x: auto;
-  font-size: 13px;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, 'Liberation Mono', 'Courier New', monospace;
-}
-
-/* KaTeX */
-.katex-display {
-  margin: 1em 0;
-}
-
-/* Tablas F2.1 */
-.ProseMirror table,
-.ProseMirror .disertare-table {
+/* Tablas básicas (la extensión de tablas añade más estilos) */
+.ProseMirror table {
   border-collapse: collapse;
-  margin: 8px 0;
+  margin: 12px 0;
   width: 100%;
 }
 
 .ProseMirror th,
-.ProseMirror td,
-.ProseMirror .disertare-table th,
-.ProseMirror .disertare-table td {
-  border: 1px solid #d3cfff;
-  padding: 4px 8px;
+.ProseMirror td {
+  border: 1px solid #d4d4f4;
+  padding: 4px 6px;
   font-size: 13px;
 }
 
-.ProseMirror th,
-.ProseMirror .disertare-table th {
-  background: #f3ecff;
-  font-weight: 600;
+/* Citas en bloque */
+.ProseMirror blockquote {
+  border-left: 3px solid #c4b5fd;
+  margin: 0 0 0.75em;
+  padding: 4px 10px;
+  color: #4b5563;
+  background: #f5f3ff;
+  border-radius: 0 4px 4px 0;
 }
 
-.ProseMirror tr:hover,
-.ProseMirror .disertare-table tr:hover {
-  background: #f9f6ff;
+/* Código en línea */
+.ProseMirror code {
+  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 12px;
+  background: #f3f4ff;
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
-.ProseMirror .selectedCell {
-  outline: 2px solid #ff9800;
-  outline-offset: -2px;
+/* Bloques de código */
+.ProseMirror pre {
+  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 6px;
+  overflow-x: auto;
 }
 
-/* Citas y bibliografía */
+/* Citas y bibliografía (nodos especiales) */
 .dsr-citation-inline {
-  padding: 0 2px;
-  border-radius: 2px;
-  background: #f3ecff;
-  color: #6a5af9;
-  font-size: 0.85em;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(106, 90, 249, 0.06);
+  border: 1px dashed rgba(106, 90, 249, 0.5);
+  color: #4c1d95;
+  font-size: 12px;
 }
 
 .dsr-bibliography {
