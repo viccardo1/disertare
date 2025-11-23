@@ -14,7 +14,7 @@
       class="toolbar-toggle"
       @click="emit('toggle-paged-preview')"
     >
-      {{ isPagedPreview ? 'Vista continua' : 'Vista paginada 1:1' }}
+      Vista paginada 1:1
     </button>
 
     <button
@@ -32,42 +32,44 @@
     >
       Encabezados y pies
     </button>
+
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-stats-panel')"
+    >
+      Datos / Estadística
+    </button>
   </div>
 </template>
 
-<script setup lang="ts">
-const props = defineProps<{
-  isPagedPreview: boolean
-}>()
-
+<script lang="ts" setup>
 const emit = defineEmits<{
   (e: 'toggle-references'): void
   (e: 'toggle-paged-preview'): void
   (e: 'toggle-ocr-panel'): void
   (e: 'toggle-page-sections-panel'): void
+  (e: 'toggle-stats-panel'): void
 }>()
-
-const isPagedPreview = props.isPagedPreview
 </script>
 
 <style scoped>
 .editor-toolbar-secondary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 12px 10px;
-  border-top: 1px solid #e0d6ff;
-  background: #f7f4ff;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e3e0ff;
+  background: #faf9ff;
 }
 
 .toolbar-toggle {
-  min-height: 28px;
-  padding: 4px 10px;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  padding: 0.35rem 0.9rem;
   border-radius: 999px;
   border: 1px solid #d3cfff;
-  background: #ffffff;
-  font-size: 12px;
-  line-height: 1.2;
+  background: #f6f4ff;
   cursor: pointer;
   color: #4b3f72;
   font-weight: 600;

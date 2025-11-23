@@ -18,6 +18,7 @@ import { Cad } from '@disertare/editor-ext-cad'
 import { Dicom } from '@disertare/editor-ext-dicom'
 import { GeoSpatial } from '@disertare/editor-ext-geospatial'
 import { Slides } from '@disertare/editor-ext-slides'
+import { StatsChartNode } from '@disertare/editor-ext-stats'
 import {
   CitationInline,
   Bibliography,
@@ -25,6 +26,9 @@ import {
 } from '@disertare/editor-citations'
 import type { CitationStyleId } from '@disertare/editor-citations'
 import { OcrExtension as Ocr } from '@disertare/editor-ext-ocr'
+
+// F2.5: secciones de página (encabezados/pies 1:1 DOCX/PDF)
+import { PageSectionExtension } from '@disertare/editor-ext-page-section'
 
 export interface UseDisertareEditorOptions {
   editor: Ref<Editor | null>
@@ -38,11 +42,10 @@ export interface UseDisertareEditorOptions {
 }
 
 /**
- * F2 / F2.2 / F2.3.R / F2.4
- * Instancia y configura el editor TipTap de Disertare.
- * Encapsula:
+ * Hook central que inicializa el Editor de Disertare y registra:
+ *
  *  - Extensiones base (StarterKit, tablas, código, etc.).
- *  - Extensiones avanzadas (Gantt, CAD, DICOM, Geo, Slides, OCR).
+ *  - Extensiones avanzadas (Gantt, CAD, DICOM, Geo, Slides, OCR, PageSection).
  *  - Citas y bibliografía (CitationInline + Bibliography).
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
@@ -67,10 +70,23 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Dicom,
           GeoSpatial,
           Slides,
+          StatsChartNode,
+
+          // F2.5: metadatos de secciones/encabezados/pies por sección
+          PageSectionExtension.configure({
+            defaultTemplate: {
+              id: 'default',
+              name: 'General',
+              header: '{TITLE}',
+              footer: '{PAGE} / {PAGES}',
+            },
+          }),
+
           // F2.4: extensión OCR (on-device, motor definido en @disertare/editor-ext-ocr)
           Ocr.configure({
             defaultLang: 'es',
           }),
+
           CitationInline.configure({
             getReferenceById: (id: string) =>
             options.citationManager.getReference(id),
@@ -84,7 +100,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           }),
         ],
         content:
-        '<p>Prueba F2: inserta KaTeX, código, Mermaid, tabla, ..., CAD, DICOM, GeoSpatial o Slides desde la barra inferior.</p>',
+        '<p>Prueba F2: inserta KaTeX, código, Mermaid, tabla, ....., CAD, DICOM, GeoSpatial o Slides desde la barra inferior.</p>',
       })
 
       options.editor.value = markRaw(instance)
@@ -93,14 +109,19 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
       ;(window as any).editor = instance
 
       if (options.onUpdate) {
-        instance.on('update', options.onUpdate)
+        instance.on('update', () => {
+          options.onUpdate?.()
+        })
       }
 
       if (options.onSelectionUpdate) {
-        instance.on('selectionUpdate', options.onSelectionUpdate)
+        instance.on('selectionUpdate', () => {
+          options.onSelectionUpdate?.()
+        })
       }
     } catch (error) {
-      console.error('[F2] Error al inicializar el editor:', error)
+      // eslint-disable-next-line no-console
+      console.error('Error al inicializar el editor de Disertare:', error)
     }
   })
 
