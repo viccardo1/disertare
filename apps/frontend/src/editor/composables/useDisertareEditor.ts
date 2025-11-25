@@ -17,14 +17,16 @@ import { Gantt } from '@disertare/editor-ext-gantt'
 import { Cad } from '@disertare/editor-ext-cad'
 import { Dicom } from '@disertare/editor-ext-dicom'
 import { GeoSpatial } from '@disertare/editor-ext-geospatial'
+import { ChemExtension } from '@disertare/editor-ext-chem'
 import { Slides } from '@disertare/editor-ext-slides'
 import { StatsChartNode } from '@disertare/editor-ext-stats'
 import {
   CitationInline,
   Bibliography,
   defaultCitationFormatter,
+  type CitationStyleId,
+  type CitationFormatter,
 } from '@disertare/editor-citations'
-import type { CitationStyleId } from '@disertare/editor-citations'
 import { OcrExtension as Ocr } from '@disertare/editor-ext-ocr'
 
 // F2.5: secciones de página (encabezados/pies 1:1 DOCX/PDF)
@@ -42,11 +44,43 @@ export interface UseDisertareEditorOptions {
 }
 
 /**
+ * Wrapper alrededor del formateador por defecto de citas
+ * para corregir detalles de puntuación (p. ej. "V..", ".. 2023").
+ *
+ * NO cambia la lógica de estilos; solo limpia la salida final.
+ */
+const safeCitationFormatter: CitationFormatter = {
+  formatInText(reference, loc, style) {
+    return defaultCitationFormatter.formatInText(reference, loc, style)
+  },
+
+  formatBibliographyEntry(reference, style) {
+    let raw = defaultCitationFormatter.formatBibliographyEntry(reference, style)
+
+    // Colapsar puntos duplicados: "V.." -> "V."
+    raw = raw.replace(/\.{2,}/g, '.')
+
+    // Limpiar pequeños artefactos de espacios
+    raw = raw.replace(/\s+\./g, '. ')
+    raw = raw.replace(/\. \)/g, '.)')
+
+    return raw.trim()
+  },
+}
+
+/**
  * Hook central que inicializa el Editor de Disertare y registra:
  *
- *  - Extensiones base (StarterKit, tablas, código, etc.).
- *  - Extensiones avanzadas (Gantt, CAD, DICOM, Geo, Slides, OCR, PageSection).
- *  - Citas y bibliografía (CitationInline + Bibliography).
+ *  - Extensiones base (StarterKit).
+ *  - Extensiones de dominio F2.x (KaTeX, Prism, Mermaid, Imágenes, Tablas,
+ *    Gantt, CAD, DICOM, Geo, Chem, Slides, Stats).
+ *  - F2.5: PageSectionExtension para encabezados/pies 1:1.
+ *  - F2.4: OCR on-device.
+ *  - F2.3: Citas/Bibliografía.
+ *  - F2.7: Química 2D/3D (ChemExtension).
+ *
+ * Mantiene la instancia de Editor en options.editor y expone window.editor
+ * para facilitar el debug durante F2.x.
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
   onMounted(() => {
@@ -69,6 +103,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Cad,
           Dicom,
           GeoSpatial,
+          ChemExtension,
           Slides,
           StatsChartNode,
 
@@ -87,41 +122,38 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
             defaultLang: 'es',
           }),
 
+          // F2.3: citas inline
           CitationInline.configure({
             getReferenceById: (id: string) =>
             options.citationManager.getReference(id),
                                    getCurrentStyle: () => options.getCitationStyle(),
-                                   formatter: defaultCitationFormatter,
+                                   formatter: safeCitationFormatter,
           }),
+
+          // F2.3: bloque de bibliografía
           Bibliography.configure({
             getReferences: () => options.citationManager.listReferences(),
                                  getCurrentStyle: () => options.getCitationStyle(),
-                                 formatter: defaultCitationFormatter,
+                                 formatter: safeCitationFormatter,
           }),
         ],
-        content:
-        '<p>Prueba F2: inserta KaTeX, código, Mermaid, tabla, ....., CAD, DICOM, GeoSpatial o Slides desde la barra inferior.</p>',
+        onUpdate: () => {
+          if (options.onUpdate) {
+            options.onUpdate()
+          }
+        },
+        onSelectionUpdate: () => {
+          if (options.onSelectionUpdate) {
+            options.onSelectionUpdate()
+          }
+        },
       })
 
       options.editor.value = markRaw(instance)
-
-      // Dev helper: inspección desde consola
-      ;(window as any).editor = instance
-
-      if (options.onUpdate) {
-        instance.on('update', () => {
-          options.onUpdate?.()
-        })
-      }
-
-      if (options.onSelectionUpdate) {
-        instance.on('selectionUpdate', () => {
-          options.onSelectionUpdate?.()
-        })
-      }
+      ;(window as any).editor = options.editor.value
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error al inicializar el editor de Disertare:', error)
+      console.error('[Editor] Error inicializando TipTap:', error)
     }
   })
 

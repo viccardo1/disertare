@@ -16,7 +16,7 @@ function formatPersonName(name: PersonName): string {
     const initials = name.given
     .split(/\s+/)
     .filter(Boolean)
-    .map((p) => `${p[0].toUpperCase()}.`)
+    .map((p) => `${p[0]!.toUpperCase()}.`)
     .join(' ')
     return `${name.family}, ${initials}`
   }
@@ -43,7 +43,7 @@ function formatAuthors(ref: Reference, style: CitationStyleId): string {
           const initials = n.given
           .split(/\s+/)
           .filter(Boolean)
-          .map((p) => p[0].toUpperCase())
+          .map((p) => p[0]!.toUpperCase())
           .join('')
           return `${n.family} ${initials}`
         }
@@ -57,13 +57,13 @@ function formatAuthors(ref: Reference, style: CitationStyleId): string {
       return `${parts.slice(0, 6).join(', ')}, et al.`
     }
 
-    // Resto: estilo tipo APA/Harvard "Apellido, N. N." con "y"/"&"
+    // Resto: estilo tipo APA/Harvard "Apellido, N. N." con "&"/"et al."
     if (list.length === 1) {
-      return formatPersonName(list[0])
+      return formatPersonName(list[0]!)
     }
 
     if (list.length === 2) {
-      return `${formatPersonName(list[0])} & ${formatPersonName(list[1])}`
+      return `${formatPersonName(list[0]!)} & ${formatPersonName(list[1]!)}`
     }
 
     const firstThree = list.slice(0, 3).map(formatPersonName)
@@ -83,8 +83,8 @@ function formatYear(ref: Reference): string {
 
 /**
  * Formatea una entrada de bibliografía básica según el estilo.
- * En F2.3 diferenciamos claramente de la cita en texto:
- * aquí siempre devolvemos referencia completa "Autor. (Año). Título."
+ * Aquí mantenemos la lógica simple, pero corregimos la puntuación:
+ * NO añadimos un punto extra después de `authors`.
  */
 function formatBibliographyEntry(
   ref: Reference,
@@ -97,16 +97,17 @@ function formatBibliographyEntry(
   switch (style) {
     case 'mla':
       // Apellido, Nombre. Título. Año.
-      return `${authors}. ${title}. ${year}.`
+      // OJO: authors ya trae el punto de las iniciales, no añadimos otro.
+      return `${authors} ${title}. ${year}.`
 
     case 'chicago':
       // Apellido, Nombre. Título. Año.
-      return `${authors}. ${title}. ${year}.`
+      return `${authors} ${title}. ${year}.`
 
     case 'vancouver':
     case 'ieee':
       // Autores. Título. Año.
-      return `${authors}. ${title}. ${year}.`
+      return `${authors} ${title}. ${year}.`
 
     case 'acs':
     case 'iso690':
@@ -115,7 +116,7 @@ function formatBibliographyEntry(
     case 'apa':
     default:
       // Autor, N. N. (Año). Título.
-      return `${authors}. (${year}). ${title}.`
+      return `${authors} (${year}). ${title}.`
   }
 }
 

@@ -10,7 +10,7 @@ import type {
 
 function primarySurname(authors?: PersonName[]): string | null {
   if (!authors || authors.length === 0) return null
-    const a = authors[0]
+    const a = authors[0]!
     if (a.family) return a.family
       if (a.literal) return a.literal
         if (a.given) return a.given
@@ -25,13 +25,14 @@ function formatYear(issued?: DateParts): string {
 function initialsFromGiven(given?: string): string {
   if (!given) return ''
     const parts = given.split(/\s+/).filter(Boolean)
-    return parts.map((p) => `${p[0].toUpperCase()}.`).join(' ')
+    return parts.map((p) => `${p[0]!.toUpperCase()}.`).join(' ')
 }
 
 function formatAuthorsAPA(authors?: PersonName[]): string {
   if (!authors || authors.length === 0) return ''
+
     if (authors.length === 1) {
-      const a = authors[0]
+      const a = authors[0]!
       const family = a.family ?? a.literal ?? a.given ?? ''
       const initials = initialsFromGiven(a.given)
       return initials ? `${family}, ${initials}` : family
@@ -44,7 +45,7 @@ function formatAuthorsAPA(authors?: PersonName[]): string {
       return `${f1} & ${f2}`
     }
 
-    const a1 = authors[0]
+    const a1 = authors[0]!
     const f1 = a1.family ?? a1.literal ?? a1.given ?? ''
     return `${f1} et al.`
 }
@@ -66,10 +67,11 @@ function formatUrlOrDoi(ref: Reference): string {
 }
 
 /**
- * Formateador por defecto para F2.3.
- * No pretende ser una implementación 100 % exhaustiva de cada estilo,
- * pero respeta las estructuras básicas de APA y Vancouver y reutiliza
- * el mismo esquema para el resto de estilos mientras tanto.
+ * Formateador por defecto para F2.x.
+ * Cubre:
+ *  - Citas en texto autor-año (APA/Harvard/Chicago-like)
+ *  - Citas numéricas estilo Vancouver
+ *  - Entradas de bibliografía básicas.
  */
 export const defaultCitationFormatter: CitationFormatter = {
   formatInText(reference: Reference, loc: CitationLocation, style: CitationStyleId): string {
@@ -95,7 +97,9 @@ export const defaultCitationFormatter: CitationFormatter = {
     let core = `${surname}, ${year}`
 
     if (loc.locator) {
-      core = `${core}, p. ${loc.locator}`
+      // Si parece rango (141-146), usamos "pp.", si no "p."
+      const pagesLabel = /[-–]/.test(loc.locator) ? 'pp.' : 'p.'
+      core = `${core}, ${pagesLabel} ${loc.locator}`
     }
 
     let text = `(${core})`

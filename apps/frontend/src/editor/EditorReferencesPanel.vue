@@ -1,20 +1,27 @@
 <!-- apps/frontend/src/editor/EditorReferencesPanel.vue -->
 <template>
   <div class="references-panel">
+    <!-- Encabezado -->
     <div class="references-panel__header">
-      <span><strong>Citas</strong></span>
+      <div class="references-panel__title">
+        <span class="references-panel__title-main">Gestor de citas</span>
+        <span class="references-panel__title-sub">Referencias y estilo</span>
+      </div>
+
       <button
         type="button"
         class="references-panel__close"
         @click="emit('close')"
+        aria-label="Cerrar gestor de citas"
       >
         ×
       </button>
     </div>
 
-    <div class="references-panel__row">
+    <!-- Estilo de cita -->
+    <div class="references-panel__row references-panel__row--style">
       <label>
-        Estilo de cita
+        <span class="references-panel__label">Estilo de cita</span>
         <select v-model="selectedStyle">
           <option
             v-for="style in citationStyles"
@@ -27,39 +34,51 @@
       </label>
     </div>
 
+    <!-- Alta / edición rápida -->
     <div class="references-panel__row">
       <div class="references-panel__row-title">
         {{ editingRefId ? 'Editar referencia' : 'Nueva referencia rápida' }}
       </div>
+
       <label>
-        Autor (Apellido, Nombre)
+        <span class="references-panel__label">
+          Autor (Apellido, Nombre o institución)
+        </span>
         <input
           v-model="newRefAuthor"
-          placeholder="Pérez, Ana"
+          placeholder="Pérez, Ana / INEGI / Secretaría de Salud"
         />
       </label>
+
       <label>
-        Año
+        <span class="references-panel__label">Año</span>
         <input
           v-model="newRefYear"
           placeholder="2020"
         />
       </label>
+
       <label>
-        Título
+        <span class="references-panel__label">Título</span>
         <input
           v-model="newRefTitle"
-          placeholder="Título de la obra"
+          placeholder="Título de la obra / norma / ley / informe"
         />
       </label>
+
       <div class="references-panel__new-actions">
-        <button type="button" @click="handleAddQuickReference">
+        <button
+          type="button"
+          class="references-panel__button references-panel__button--primary"
+          @click="handleAddQuickReference"
+        >
           {{ editingRefId ? 'Guardar cambios' : 'Agregar y citar' }}
         </button>
+
         <button
           v-if="editingRefId"
           type="button"
-          class="references-panel__secondary"
+          class="references-panel__button references-panel__button--secondary"
           @click="handleCancelEdit"
         >
           Cancelar
@@ -67,59 +86,108 @@
       </div>
     </div>
 
-    <div class="references-panel__list">
-      <div
-        v-for="ref in references"
-        :key="ref.id"
-        class="references-panel__item"
-      >
-        <div class="references-panel__item-main">
-          <div class="references-panel__item-title">
-            {{ ref.title || '[Sin título]' }}
-          </div>
-          <div class="references-panel__item-meta">
-            {{ primaryAuthorLabel(ref) }} ·
-            {{ ref.issued?.year ?? 's. f.' }}
-          </div>
-        </div>
-        <div class="references-panel__item-actions">
-          <button
-            type="button"
-            @click="emitInsertCitation(ref.id)"
-          >
-            Citar
-          </button>
-          <button
-            type="button"
-            @click="startEditReference(ref)"
-          >
-            Editar
-          </button>
-          <button
-            type="button"
-            class="references-panel__delete"
-            @click="deleteReference(ref.id)"
-          >
-            ✕
-          </button>
-        </div>
+    <!-- Lista de referencias -->
+    <div class="references-panel__list-container">
+      <div class="references-panel__list-header">
+        <span class="references-panel__list-title">Referencias guardadas</span>
+        <span class="references-panel__list-count">
+          {{ references.length }} referencia<span v-if="references.length !== 1">s</span>
+        </span>
       </div>
 
-      <p
-        v-if="references.length === 0"
-        class="references-panel__empty"
-      >
-        Aún no hay referencias. Crea una arriba.
+      <div class="references-panel__list">
+        <div
+          v-for="ref in references"
+          :key="ref.id"
+          class="references-panel__item"
+        >
+          <div class="references-panel__item-main">
+            <div class="references-panel__item-title">
+              {{ ref.title || '[Sin título]' }}
+            </div>
+            <div class="references-panel__item-meta">
+              {{ primaryAuthorLabel(ref) }} ·
+              {{ ref.issued?.year ?? 's. f.' }}
+            </div>
+          </div>
+
+          <div class="references-panel__item-actions">
+            <button
+              type="button"
+              class="references-panel__button references-panel__button--small"
+              @click="emitInsertCitation(ref.id)"
+            >
+              Citar
+            </button>
+            <button
+              type="button"
+              class="references-panel__button references-panel__button--small"
+              @click="startEditReference(ref)"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              class="references-panel__button references-panel__button--delete"
+              @click="deleteReference(ref.id)"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <p
+          v-if="references.length === 0"
+          class="references-panel__empty"
+        >
+          Aún no hay referencias. Crea una arriba o importa BibTeX / CSL-JSON.
+        </p>
+      </div>
+    </div>
+
+    <!-- Opciones de cita en texto (prefijo / páginas / sufijo) -->
+    <div class="references-panel__row references-panel__row--citation-options">
+      <div class="references-panel__row-title">
+        Opciones de cita en texto
+      </div>
+      <div class="references-panel__options-grid">
+        <label>
+          <span class="references-panel__label">Prefijo</span>
+          <input
+            v-model="citationPrefix"
+            placeholder="Ej.: véase"
+          />
+        </label>
+        <label>
+          <span class="references-panel__label">Páginas (locator)</span>
+          <input
+            v-model="citationLocator"
+            placeholder="Ej.: 141-146"
+          />
+        </label>
+        <label>
+          <span class="references-panel__label">Sufijo</span>
+          <input
+            v-model="citationSuffix"
+            placeholder="Texto después de la cita"
+          />
+        </label>
+      </div>
+      <p class="references-panel__hint">
+        El campo de páginas se usa para generar citas como
+        <code>(Autor, Año, pp. 141-146)</code>. En Vancouver se mostrará como
+        <code>[n] (pp. 141-146)</code>.
       </p>
     </div>
 
-    <!-- Import/Export BibTeX / CSL-JSON -->
+    <!-- Import / Export BibTeX / CSL-JSON -->
     <div class="references-panel__import">
       <details>
-        <summary>BibTeX / CSL-JSON</summary>
+        <summary>Importar BibTeX / CSL-JSON</summary>
+
         <div class="references-panel__import-section">
           <label>
-            BibTeX
+            <span class="references-panel__label">BibTeX</span>
             <textarea
               v-model="bibtexText"
               rows="4"
@@ -127,13 +195,17 @@
             ></textarea>
           </label>
           <div class="references-panel__import-actions">
-            <button type="button" @click="handleImportBibtex">
+            <button
+              type="button"
+              class="references-panel__button references-panel__button--primary"
+              @click="handleImportBibtex"
+            >
               Importar BibTeX
             </button>
           </div>
 
           <label>
-            CSL-JSON
+            <span class="references-panel__label">CSL-JSON</span>
             <textarea
               v-model="cslJsonText"
               rows="4"
@@ -141,7 +213,11 @@
             ></textarea>
           </label>
           <div class="references-panel__import-actions">
-            <button type="button" @click="handleImportCslJson">
+            <button
+              type="button"
+              class="references-panel__button references-panel__button--primary"
+              @click="handleImportCslJson"
+            >
               Importar CSL-JSON
             </button>
           </div>
@@ -177,7 +253,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'references-changed'): void
-  (e: 'insert-citation', refId: string): void
+  (e: 'insert-citation', payload: {
+    refId: string
+    locator?: string
+    prefix?: string
+    suffix?: string
+  }): void
   (e: 'update:currentCitationStyle', value: CitationStyleId): void
 }>()
 
@@ -189,23 +270,41 @@ const editingRefId = ref<string | null>(null)
 const bibtexText = ref('')
 const cslJsonText = ref('')
 
-const selectedStyle = computed({
+const citationPrefix = ref('')
+const citationLocator = ref('')
+const citationSuffix = ref('')
+
+const selectedStyle = computed<CitationStyleId>({
   get: () => props.currentCitationStyle,
   set: (value: CitationStyleId) => {
     emit('update:currentCitationStyle', value)
   },
 })
 
+function stripTrailingDots(value: string): string {
+  return value.replace(/[.]+$/g, '')
+}
+
+function normalizeTitle(title: string): string {
+  return stripTrailingDots(title.trim())
+}
+
 function parsePersonName(input: string): PersonName | null {
   const trimmed = input.trim()
   if (!trimmed) return null
-  const parts = trimmed.split(',')
-  if (parts.length === 2) {
-    const family = parts[0].trim()
-    const given = parts[1].trim()
-    return { family, given }
+
+  // Para instituciones o leyes, usamos literal.
+  if (!trimmed.includes(',')) {
+    return { literal: stripTrailingDots(trimmed) }
   }
-  return { literal: trimmed }
+
+  const [familyRaw, givenRaw = ''] = trimmed.split(',', 2)
+  const family = stripTrailingDots(familyRaw.trim())
+  const given = stripTrailingDots(givenRaw.trim())
+
+  if (!family && !given) return null
+  if (!given) return { family }
+  return { family, given }
 }
 
 function resetQuickForm(): void {
@@ -229,11 +328,16 @@ function handleAddQuickReference(): void {
       ? { year: yearNum }
       : undefined
 
-  // modo edición
+  const normalizedTitle =
+    newRefTitle.value.trim() !== ''
+      ? normalizeTitle(newRefTitle.value)
+      : 'Referencia sin título'
+
+  // Modo edición
   if (editingRefId.value) {
     const id = editingRefId.value
     props.citationManager.updateReference(id, {
-      title: newRefTitle.value || 'Referencia sin título',
+      title: normalizedTitle,
       author: authorName ? [authorName] : undefined,
       issued,
     })
@@ -245,10 +349,10 @@ function handleAddQuickReference(): void {
     return
   }
 
-  // modo alta rápida
+  // Alta rápida
   const ref = props.citationManager.addReference({
     type: 'article-journal',
-    title: newRefTitle.value || 'Referencia sin título',
+    title: normalizedTitle,
     author: authorName ? [authorName] : undefined,
     issued,
   })
@@ -257,8 +361,13 @@ function handleAddQuickReference(): void {
   loadFromManager()
   emit('references-changed')
 
-  // Insertar cita en el documento (TipTap) lo hace el padre
-  emit('insert-citation', ref.id)
+  // Insertar cita con las opciones actuales (prefijo/páginas/sufijo)
+  emit('insert-citation', {
+    refId: ref.id,
+    locator: citationLocator.value || undefined,
+    prefix: citationPrefix.value || undefined,
+    suffix: citationSuffix.value || undefined,
+  })
 }
 
 function handleCancelEdit(): void {
@@ -287,10 +396,12 @@ function startEditReference(ref: Reference): void {
 
 function deleteReference(id: string): void {
   props.citationManager.removeReference(id)
+
   if (editingRefId.value === id) {
     editingRefId.value = null
     resetQuickForm()
   }
+
   loadFromManager()
   emit('references-changed')
 }
@@ -339,7 +450,12 @@ function handleImportCslJson(): void {
 }
 
 function emitInsertCitation(refId: string): void {
-  emit('insert-citation', refId)
+  emit('insert-citation', {
+    refId,
+    locator: citationLocator.value || undefined,
+    prefix: citationPrefix.value || undefined,
+    suffix: citationSuffix.value || undefined,
+  })
 }
 
 onMounted(() => {
@@ -349,52 +465,89 @@ onMounted(() => {
 
 <style scoped>
 .references-panel {
-  position: fixed;
-  right: 24px;
-  bottom: 72px;
-  width: 320px;
-  max-height: 60vh;
-  background: #ffffff;
-  border-radius: 6px;
-  box-shadow:
-    0 0 0 1px #e0d6ff,
-    0 10px 30px rgba(0, 0, 0, 0.15);
-  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 50;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e0d6ff;
+  box-shadow:
+    0 0 0 1px #f4f0ff,
+    0 8px 24px rgba(15, 23, 42, 0.08);
   font-size: 13px;
+  color: #1f2933;
+  /* Mantener el panel siempre dentro de la ventana, sobre el footer */
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
 }
 
+/* Header */
 .references-panel__header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
   gap: 8px;
   margin-bottom: 4px;
+}
+
+.references-panel__title {
+  display: flex;
+  flex-direction: column;
+}
+
+.references-panel__title-main {
+  font-weight: 700;
+  font-size: 14px;
+  color: #312e81;
+}
+
+.references-panel__title-sub {
+  font-size: 11px;
+  color: #6b7280;
 }
 
 .references-panel__close {
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   padding: 0 4px;
   color: #6a5af9;
 }
 
+/* Rows */
 .references-panel__row {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f3f0ff;
+}
+
+.references-panel__row--style {
+  padding-top: 0;
+}
+
+.references-panel__row--citation-options {
+  background: #faf9ff;
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px dashed #e0d6ff;
 }
 
 .references-panel__row-title {
   font-size: 12px;
   font-weight: 600;
   color: #4b3f72;
+  margin-bottom: 4px;
+}
+
+.references-panel__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
 }
 
 .references-panel__row label {
@@ -405,10 +558,74 @@ onMounted(() => {
 
 .references-panel__row input,
 .references-panel__row select {
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid #d3cfff;
   padding: 4px 6px;
   font-size: 13px;
+}
+
+.references-panel__options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.references-panel__hint {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Botones */
+.references-panel__button {
+  border-radius: 999px;
+  border: 1px solid #d3cfff;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1.2;
+  background: #f3ecff;
+  color: #4338ca;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.references-panel__button--primary {
+  background: #4f46e5;
+  border-color: #4338ca;
+  color: #f9fafb;
+}
+
+.references-panel__button--primary:hover {
+  background: #4338ca;
+  border-color: #3730a3;
+  box-shadow: 0 2px 6px rgba(55, 48, 163, 0.35);
+}
+
+.references-panel__button--secondary {
+  background: #ffffff;
+  color: #4b3f72;
+}
+
+.references-panel__button--secondary:hover {
+  background: #f9f5ff;
+}
+
+.references-panel__button--small {
+  padding: 3px 8px;
+}
+
+.references-panel__button--delete {
+  background: #ffecec;
+  border-color: #ffc5c5;
+  color: #c53030;
+}
+
+.references-panel__button--delete:hover {
+  background: #fed7d7;
 }
 
 .references-panel__new-actions {
@@ -418,25 +635,34 @@ onMounted(() => {
   margin-top: 4px;
 }
 
-.references-panel__new-actions button,
-.references-panel__item button {
-  border-radius: 4px;
-  border: 1px solid #d3cfff;
-  background: #f3ecff;
-  padding: 3px 8px;
-  font-size: 12px;
-  cursor: pointer;
+/* Lista de referencias */
+.references-panel__list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.references-panel__secondary {
-  background: #ffffff;
+.references-panel__list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.references-panel__list-title {
+  font-weight: 600;
+  color: #4b3f72;
+}
+
+.references-panel__list-count {
+  font-style: italic;
 }
 
 .references-panel__list {
-  margin-top: 4px;
-  border-top: 1px solid #f1ecff;
-  padding-top: 4px;
+  max-height: 220px;
   overflow-y: auto;
+  padding-right: 2px;
 }
 
 .references-panel__item {
@@ -472,21 +698,16 @@ onMounted(() => {
   gap: 3px;
 }
 
-.references-panel__delete {
-  background: #ffecec;
-  border-color: #ffc5c5;
-  color: #c53030;
-}
-
+/* Estado vacío */
 .references-panel__empty {
   font-size: 12px;
   color: #7a7399;
   margin: 4px 0 0;
 }
 
-/* Import/Export BibTeX / CSL */
+/* Import / Export */
 .references-panel__import {
-  margin-top: 6px;
+  margin-top: 4px;
   border-top: 1px solid #f1ecff;
   padding-top: 4px;
 }
@@ -495,6 +716,7 @@ onMounted(() => {
   cursor: pointer;
   font-weight: 600;
   color: #4b3f72;
+  font-size: 12px;
 }
 
 .references-panel__import-section {
@@ -519,14 +741,5 @@ onMounted(() => {
 .references-panel__import-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.references-panel__import-actions button {
-  border-radius: 4px;
-  border: 1px solid #d3cfff;
-  background: #f3ecff;
-  padding: 3px 8px;
-  font-size: 12px;
-  cursor: pointer;
 }
 </style>

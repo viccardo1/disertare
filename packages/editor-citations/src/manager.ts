@@ -13,10 +13,13 @@ export interface CitationManager {
   clear(): void
 }
 
+/**
+ * Implementación sencilla en memoria.
+ * No depende de librerías externas (sin nanoid).
+ */
 class InMemoryCitationManager implements CitationManager {
-  private references = new Map<string, Reference>()
   private style: CitationStyleId = 'apa'
-    private nextCitationNumber = 1
+    private readonly references = new Map<string, Reference>()
 
     getStyle(): CitationStyleId {
       return this.style
@@ -27,23 +30,23 @@ class InMemoryCitationManager implements CitationManager {
     }
 
     addReference(input: Omit<Reference, 'id'> & { id?: string }): Reference {
-      const id = input.id ?? this.generateId()
+      const trimmedId = input.id?.trim()
+      const id = trimmedId && trimmedId.length > 0 ? trimmedId : this.generateId()
+
+      // Normalizamos el objeto referencia: garantizamos id y type.
       const existing = this.references.get(id)
-
-      let citationNumber = input.citationNumber
-
-      if (!citationNumber) {
-        citationNumber = existing?.citationNumber
-      }
-
-      if (!citationNumber) {
-        citationNumber = this.nextCitationNumber++
-      }
+      const base: Reference =
+      existing ??
+      ({
+        id,
+        // fallback razonable; CSL usa "article-journal" muy a menudo
+        type: (input as any).type ?? 'article-journal',
+      } as Reference)
 
       const ref: Reference = {
+        ...base,
         ...input,
-        id,
-        citationNumber,
+        id, // aseguramos que no se sobreescriba con algo raro
       }
 
       this.references.set(id, ref)
@@ -51,17 +54,17 @@ class InMemoryCitationManager implements CitationManager {
     }
 
     updateReference(id: string, patch: Partial<Reference>): Reference | null {
-      const existing = this.references.get(id)
-      if (!existing) return null
+      const current = this.references.get(id)
+      if (!current) return null
 
-        const merged: Reference = {
-          ...existing,
+        const updated: Reference = {
+          ...current,
           ...patch,
-          id,
+          id: current.id, // nunca cambiamos el id
         }
 
-        this.references.set(id, merged)
-        return merged
+        this.references.set(id, updated)
+        return updated
     }
 
     getReference(id: string): Reference | null {
@@ -69,12 +72,7 @@ class InMemoryCitationManager implements CitationManager {
     }
 
     listReferences(): Reference[] {
-      // Ordenamos por citationNumber para estilos numéricos.
-      return Array.from(this.references.values()).sort((a, b) => {
-        const na = a.citationNumber ?? 0
-        const nb = b.citationNumber ?? 0
-        return na - nb
-      })
+      return Array.from(this.references.values())
     }
 
     removeReference(id: string): void {
@@ -85,6 +83,10 @@ class InMemoryCitationManager implements CitationManager {
       this.references.clear()
     }
 
+    /**
+     * Generador simple de IDs únicos "ref-xxxxx".
+     * Es suficiente para uso en memoria en el editor.
+     */
     private generateId(): string {
       return `ref-${Math.random().toString(36).slice(2, 10)}`
     }

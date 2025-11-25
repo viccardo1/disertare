@@ -4,53 +4,85 @@
     <button @click="emit('insert-katex')" :aria-label="t('editor.toolbar.katex')">
       fx
     </button>
+
     <button
       @click="emit('insert-mermaid')"
       :aria-label="t('editor.toolbar.mermaid')"
     >
       M
     </button>
+
     <button
       @click="emit('insert-code-block')"
       :aria-label="t('editor.toolbar.code')"
     >
       ]
     </button>
-    <button @click="emit('insert-table')" :aria-label="t('editor.toolbar.table')">
+
+    <button
+      @click="emit('insert-table')"
+      :aria-label="t('editor.toolbar.table')"
+    >
       T
     </button>
+
     <button
       @click="emit('insert-citation')"
       :aria-label="t('editor.toolbar.citation')"
     >
       Cita
     </button>
+
     <button
       @click="emit('insert-bibliography')"
       :aria-label="t('editor.toolbar.bibliography')"
     >
       Biblio
     </button>
-    <button @click="emit('insert-image')" :aria-label="t('editor.toolbar.image')">
+
+    <button
+      @click="emit('insert-image')"
+      :aria-label="t('editor.toolbar.image')"
+    >
       Img
     </button>
 
-    <button @click="emit('insert-gantt')" :aria-label="t('editor.toolbar.gantt')">
+    <button
+      @click="emit('insert-gantt')"
+      :aria-label="t('editor.toolbar.gantt')"
+    >
       Gantt
     </button>
 
-    <button @click="emit('insert-cad')" :aria-label="t('editor.toolbar.cad')">
+    <button
+      @click="emit('insert-cad')"
+      :aria-label="t('editor.toolbar.cad')"
+    >
       CAD
     </button>
-    <button @click="emit('insert-dicom')" :aria-label="t('editor.toolbar.dicom')">
+
+    <button
+      @click="emit('insert-dicom')"
+      :aria-label="t('editor.toolbar.dicom')"
+    >
       DICOM
     </button>
+
     <button
       @click="emit('insert-geospatial')"
       :aria-label="t('editor.toolbar.geospatial')"
     >
       Geo
     </button>
+
+    <!-- NUEVO F2.7: botón de Química -->
+    <button
+      @click="emit('insert-chem')"
+      :aria-label="t('editor.toolbar.chem')"
+    >
+      Química
+    </button>
+
     <button
       @click="emit('insert-slides')"
       :aria-label="t('editor.toolbar.slides')"
@@ -73,10 +105,11 @@ const emit = defineEmits<{
   (e: 'insert-cad'): void
   (e: 'insert-dicom'): void
   (e: 'insert-geospatial'): void
+  (e: 'insert-chem'): void
   (e: 'insert-slides'): void
 }>()
 
-// placeholder i18n (igual que en F2/F2.3, se integrará más adelante)
+// placeholder i18n
 const t = (key: string) => key
 </script>
 
@@ -94,6 +127,7 @@ const t = (key: string) => key
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 13px;
+  line-height: 1;
   cursor: pointer;
   color: #4b3f72;
   transition:
