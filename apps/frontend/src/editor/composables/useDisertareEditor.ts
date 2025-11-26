@@ -18,6 +18,7 @@ import { Cad } from '@disertare/editor-ext-cad'
 import { Dicom } from '@disertare/editor-ext-dicom'
 import { GeoSpatial } from '@disertare/editor-ext-geospatial'
 import { ChemExtension } from '@disertare/editor-ext-chem'
+import { BioExtension } from '@disertare/editor-ext-bio' // F2.8 Bio
 import { Slides } from '@disertare/editor-ext-slides'
 import { StatsChartNode } from '@disertare/editor-ext-stats'
 import {
@@ -73,14 +74,11 @@ const safeCitationFormatter: CitationFormatter = {
  *
  *  - Extensiones base (StarterKit).
  *  - Extensiones de dominio F2.x (KaTeX, Prism, Mermaid, Imágenes, Tablas,
- *    Gantt, CAD, DICOM, Geo, Chem, Slides, Stats).
+ *    Gantt, CAD, DICOM, Geo, Chem, Bio, Slides, Stats).
  *  - F2.5: PageSectionExtension para encabezados/pies 1:1.
  *  - F2.4: OCR on-device.
  *  - F2.3: Citas/Bibliografía.
- *  - F2.7: Química 2D/3D (ChemExtension).
- *
- * Mantiene la instancia de Editor en options.editor y expone window.editor
- * para facilitar el debug durante F2.x.
+ *  - F2.7/F2.8: Química y Bio.
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
   onMounted(() => {
@@ -104,6 +102,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Dicom,
           GeoSpatial,
           ChemExtension,
+          BioExtension, // F2.8 Bio integrado
           Slides,
           StatsChartNode,
 

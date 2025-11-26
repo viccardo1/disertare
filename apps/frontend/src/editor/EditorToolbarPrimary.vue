@@ -1,10 +1,15 @@
 <!-- apps/frontend/src/editor/EditorToolbarPrimary.vue -->
 <template>
   <div class="editor-toolbar">
-    <button @click="emit('insert-katex')" :aria-label="t('editor.toolbar.katex')">
+    <!-- Matemáticas -->
+    <button
+      @click="emit('insert-katex')"
+      :aria-label="t('editor.toolbar.katex')"
+    >
       fx
     </button>
 
+    <!-- Diagramas Mermaid -->
     <button
       @click="emit('insert-mermaid')"
       :aria-label="t('editor.toolbar.mermaid')"
@@ -12,27 +17,29 @@
       M
     </button>
 
+    <!-- Código (Prism) -->
     <button
       @click="emit('insert-code-block')"
       :aria-label="t('editor.toolbar.code')"
     >
-      ]
+      <span>{ }</span>
     </button>
 
+    <!-- Tabla -->
     <button
       @click="emit('insert-table')"
       :aria-label="t('editor.toolbar.table')"
     >
-      T
+      Tbl
     </button>
 
+    <!-- Cita y Bibliografía -->
     <button
       @click="emit('insert-citation')"
       :aria-label="t('editor.toolbar.citation')"
     >
       Cita
     </button>
-
     <button
       @click="emit('insert-bibliography')"
       :aria-label="t('editor.toolbar.bibliography')"
@@ -40,6 +47,7 @@
       Biblio
     </button>
 
+    <!-- Imagen -->
     <button
       @click="emit('insert-image')"
       :aria-label="t('editor.toolbar.image')"
@@ -47,6 +55,7 @@
       Img
     </button>
 
+    <!-- Gantt -->
     <button
       @click="emit('insert-gantt')"
       :aria-label="t('editor.toolbar.gantt')"
@@ -54,6 +63,7 @@
       Gantt
     </button>
 
+    <!-- CAD -->
     <button
       @click="emit('insert-cad')"
       :aria-label="t('editor.toolbar.cad')"
@@ -61,6 +71,7 @@
       CAD
     </button>
 
+    <!-- DICOM -->
     <button
       @click="emit('insert-dicom')"
       :aria-label="t('editor.toolbar.dicom')"
@@ -68,6 +79,7 @@
       DICOM
     </button>
 
+    <!-- Geo -->
     <button
       @click="emit('insert-geospatial')"
       :aria-label="t('editor.toolbar.geospatial')"
@@ -75,7 +87,7 @@
       Geo
     </button>
 
-    <!-- NUEVO F2.7: botón de Química -->
+    <!-- Química -->
     <button
       @click="emit('insert-chem')"
       :aria-label="t('editor.toolbar.chem')"
@@ -83,6 +95,15 @@
       Química
     </button>
 
+    <!-- Bio (F2.8) -->
+    <button
+      @click="emit('insert-bio-sequence')"
+      :aria-label="t('editor.toolbar.bio')"
+    >
+      Bio
+    </button>
+
+    <!-- Slides -->
     <button
       @click="emit('insert-slides')"
       :aria-label="t('editor.toolbar.slides')"
@@ -106,6 +127,7 @@ const emit = defineEmits<{
   (e: 'insert-dicom'): void
   (e: 'insert-geospatial'): void
   (e: 'insert-chem'): void
+  (e: 'insert-bio-sequence'): void
   (e: 'insert-slides'): void
 }>()
 

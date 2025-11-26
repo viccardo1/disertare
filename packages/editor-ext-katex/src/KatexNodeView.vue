@@ -31,8 +31,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { NodeViewWrapper } from '@tiptap/vue-3'
-import type { NodeViewProps } from '@tiptap/vue-3'
+import { NodeViewWrapper, type NodeViewProps } from '@tiptap/vue-3'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 const props = defineProps<NodeViewProps>()
 
@@ -43,42 +44,20 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const inline = computed<boolean>(() => props.node.attrs.inline ?? true)
 
 // fórmula local inicializada desde attrs
-const formula = ref<string>(props.node.attrs.content ?? '\\sqrt{a^2 + b^2}')
+const formula = ref<string>(
+  typeof props.node.attrs.content === 'string'
+    ? props.node.attrs.content
+    : '\\sqrt{a^2 + b^2}',
+)
 const editing = ref(false)
 
 // Placeholder para i18n
 const t = (key: string) => key
 
-// Cache global de KaTeX para no re-importar
-declare global {
-  interface Window {
-    __katexPromise?: Promise<any>
-  }
-}
-
-const loadKaTeX = async () => {
-  if (window.__katexPromise) return window.__katexPromise
-
-  window.__katexPromise = import('katex').then(mod => {
-    let link = document.getElementById('katex-stylesheet') as HTMLLinkElement | null
-    if (!link) {
-      link = document.createElement('link')
-      link.id = 'katex-stylesheet'
-      link.rel = 'stylesheet'
-      link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'
-      document.head.appendChild(link)
-    }
-    return mod
-  })
-
-  return window.__katexPromise
-}
-
-const renderFormula = async () => {
+function renderFormula() {
   if (!renderedFormula.value) return
 
   try {
-    const { default: katex } = await loadKaTeX()
     katex.render(formula.value || '', renderedFormula.value, {
       throwOnError: false,
       displayMode: !inline.value,
@@ -91,7 +70,7 @@ const renderFormula = async () => {
   }
 }
 
-const handleClick = async () => {
+async function handleClick() {
   editing.value = true
   await nextTick()
   if (inputRef.value) {
@@ -100,25 +79,28 @@ const handleClick = async () => {
   }
 }
 
-const handleSubmit = () => {
+function handleSubmit() {
   editing.value = false
   props.updateAttributes({
     content: formula.value,
     inline: inline.value,
   })
-  void renderFormula()
+  renderFormula()
 }
 
-const handleCancel = () => {
+function handleCancel() {
   editing.value = false
   // restaurar a lo que tenga el nodo actualmente
-  formula.value = props.node.attrs.content ?? formula.value
-  void renderFormula()
+  formula.value =
+    typeof props.node.attrs.content === 'string'
+      ? props.node.attrs.content
+      : formula.value
+  renderFormula()
 }
 
 // Render inicial
 onMounted(() => {
-  void renderFormula()
+  renderFormula()
 })
 
 // Si el nodo cambia desde fuera (otro comando, colaborador, etc.)
@@ -127,8 +109,16 @@ watch(
   newContent => {
     if (!editing.value && typeof newContent === 'string') {
       formula.value = newContent
-      void renderFormula()
+      renderFormula()
     }
+  },
+)
+
+// Si alguien cambia inline/display desde un comando
+watch(
+  () => inline.value,
+  () => {
+    renderFormula()
   },
 )
 </script>

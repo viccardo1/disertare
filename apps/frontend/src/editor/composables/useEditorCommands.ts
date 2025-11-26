@@ -9,6 +9,7 @@ function withEditor(editor: Ref<Editor | null>, fn: (editor: Editor) => void) {
   return () => {
     const ed = editor.value
     if (!ed) {
+      // eslint-disable-next-line no-console
       console.warn('[useEditorCommands] Editor no inicializado')
       return
     }
@@ -16,86 +17,73 @@ function withEditor(editor: Ref<Editor | null>, fn: (editor: Editor) => void) {
   }
 }
 
-/**
- * Comandos de inserción usados por la toolbar primaria.
- * Cada comando inserta el nodo correspondiente al paquete editor-ext-*.
- */
 export function useEditorCommands(editor: Ref<Editor | null>) {
   // ----------------------------
   // KaTeX
   // ----------------------------
   const insertKatex = withEditor(editor, (ed) => {
-    ed.chain()
+    ed
+    .chain()
     .focus()
-    .insertContent({
-      type: 'katex',
-      attrs: {
-        content: '\\sqrt{a^2 + b^2}',
-      },
-    })
+    .insertContent({ type: 'katex' })
     .run()
   })
 
   // ----------------------------
-  // Mermaid (F2.x)
+  // Mermaid
   // ----------------------------
   const insertMermaid = withEditor(editor, (ed) => {
-    ed.chain()
+    ed
+    .chain()
     .focus()
     .insertContent({
       type: 'mermaid',
-      attrs: {
-        // Importante: NO usar \\n, Mermaid espera texto sin doble escape
-        content: 'graph TD;\n  A[Start] --> B[End];',
-      },
     })
     .run()
   })
 
   // ----------------------------
-  // Código (Prism)
+  // Bloque de código (Prism)
   // ----------------------------
   const insertCodeBlock = withEditor(editor, (ed) => {
-    ed.chain()
+    ed
+    .chain()
     .focus()
     .insertContent({
       type: 'prism',
       attrs: {
         language: 'plaintext',
-        content: '',
       },
     })
     .run()
   })
 
   // ----------------------------
-  // Imagen
+  // Imagen (vía URL, F2.x)
   // ----------------------------
   const insertImage = withEditor(editor, (ed) => {
-    ed.chain()
-    .focus()
-    .insertContent({
-      type: 'image',
-      attrs: {
-        // src vacío = nodo válido; la extensión maneja carga posterior
-        src: '',
-        alt: '',
-        title: '',
-      },
-    })
-    .run()
+    const url = window.prompt('URL de la imagen (http/https):')
+    if (!url) {
+      return
+    }
+
+    // Usamos el comando oficial de la extensión Image (basado en TipTap)
+    // en lugar de insertar un nodo vacío que marca error.
+    ;(ed.chain().focus() as any).setImage({ src: url }).run()
   })
 
   // ----------------------------
   // Tabla
   // ----------------------------
   const insertTable = withEditor(editor, (ed) => {
-    // TipTap table: insertTable({ rows, cols, withHeaderRow })
-    // TipTap typings no incluyen correctamente el comando → ignoramos TS
-    // @ts-expect-error
-    ed.chain()
+    ed
+    .chain()
     .focus()
-    .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+    .insertTable({
+      rows: 3,
+      cols: 3,
+      withHeaderRow: true,
+    })
     .run()
   })
 
@@ -103,58 +91,102 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
   // Gantt
   // ----------------------------
   const insertGantt = withEditor(editor, (ed) => {
-    ed.chain().focus().insertContent({ type: 'gantt', attrs: {} }).run()
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'gantt',
+    })
+    .run()
   })
 
   // ----------------------------
   // CAD
   // ----------------------------
   const insertCad = withEditor(editor, (ed) => {
-    ed.chain().focus().insertContent({ type: 'cad', attrs: {} }).run()
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'cad',
+    })
+    .run()
   })
 
   // ----------------------------
   // DICOM
   // ----------------------------
   const insertDicom = withEditor(editor, (ed) => {
-    ed.chain().focus().insertContent({ type: 'dicom', attrs: {} }).run()
-  })
-
-  // ----------------------------
-  // Geo (GeoJSON / TopoJSON)
-  // ----------------------------
-  const insertGeo = withEditor(editor, (ed) => {
-    ed.chain()
+    ed
+    .chain()
     .focus()
     .insertContent({
-      type: 'geospatial',
-      attrs: {},
+      type: 'dicom',
     })
     .run()
   })
 
   // ----------------------------
-  // Química (F2.7)
+  // Geo
   // ----------------------------
-  const insertChem = withEditor(editor, (ed) => {
-    ed.chain()
+  const insertGeo = withEditor(editor, (ed) => {
+    ed
+    .chain()
     .focus()
     .insertContent({
-      type: 'chemStructure',
+      type: 'geo',
+    })
+    .run()
+  })
+
+  // ----------------------------
+  // Química
+  // ----------------------------
+  const insertChem = withEditor(editor, (ed) => {
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'chem',
+    })
+    .run()
+  })
+
+  // ----------------------------
+  // Bio (atajo desde toolbar)
+  // ----------------------------
+  const insertBioSequence = withEditor(editor, (ed) => {
+    const id =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? (crypto as any).randomUUID()
+    : String(Date.now())
+
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'bioSequence',
       attrs: {
-        id: crypto.randomUUID(), // requerido por la extensión
-                   format: 'smiles',        // formato inicial
-                     value: '',               // cadena vacía => molécula vacía válida
+        id,
+        kind: 'dna',
+        label: 'Secuencia sin título',
+        sequence: 'ATGC',
       },
     })
     .run()
   })
 
   // ----------------------------
-  // Slides (tipo PowerPoint)
+  // Slides
   // ----------------------------
   const insertSlides = withEditor(editor, (ed) => {
-    ed.chain().focus().insertContent({ type: 'slides', attrs: {} }).run()
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'slides',
+    })
+    .run()
   })
 
   return {
@@ -168,6 +200,7 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
     insertDicom,
     insertGeo,
     insertChem,
+    insertBioSequence,
     insertSlides,
   }
 }

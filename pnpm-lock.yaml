@@ -76,6 +76,9 @@ importers:
       '@disertare/editor-core':
         specifier: workspace:^
         version: link:../../packages/editor-core
+      '@disertare/editor-ext-bio':
+        specifier: workspace:*
+        version: link:../../packages/editor-ext-bio
       '@disertare/editor-ext-cad':
         specifier: workspace:^
         version: link:../../packages/editor-ext-cad
@@ -174,6 +177,18 @@ importers:
         specifier: 3.10.2
         version: 3.10.2
 
+  packages/editor-ext-bio:
+    dependencies:
+      '@disertare/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@tiptap/core':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/pm':
+        specifier: 3.10.2
+        version: 3.10.2
+
   packages/editor-ext-cad:
     dependencies:
       '@disertare/editor-core':
@@ -186,20 +201,7 @@ importers:
         specifier: 3.10.2
         version: 3.10.2
 
-  packages/editor-ext-chem:
-    dependencies:
-      '@disertare/editor-core':
-        specifier: workspace:^
-        version: link:../editor-core
-      '@tiptap/core':
-        specifier: 3.10.2
-        version: 3.10.2(@tiptap/pm@3.10.2)
-      '@tiptap/vue-3':
-        specifier: 3.10.2
-        version: 3.10.2(@floating-ui/dom@1.7.4)(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)(vue@3.5.23(typescript@5.9.3))
-      vue:
-        specifier: ^3.5.0
-        version: 3.5.23(typescript@5.9.3)
+  packages/editor-ext-chem: {}
 
   packages/editor-ext-dicom:
     dependencies:

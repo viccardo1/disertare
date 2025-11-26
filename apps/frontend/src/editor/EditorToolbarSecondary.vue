@@ -14,7 +14,7 @@
       class="toolbar-toggle"
       @click="emit('toggle-paged-preview')"
     >
-      Vista paginada 1:1
+      Vista paginada
     </button>
 
     <button
@@ -30,7 +30,7 @@
       class="toolbar-toggle"
       @click="emit('toggle-page-sections-panel')"
     >
-      Encabezados y pies
+      Encabezados / pies
     </button>
 
     <button
@@ -40,16 +40,25 @@
     >
       Datos / Estadística
     </button>
+
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-bio-panel')"
+    >
+      Bio (secuencias)
+    </button>
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 const emit = defineEmits<{
   (e: 'toggle-references'): void
   (e: 'toggle-paged-preview'): void
   (e: 'toggle-ocr-panel'): void
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
+  (e: 'toggle-bio-panel'): void
 }>()
 </script>
 
@@ -57,19 +66,18 @@ const emit = defineEmits<{
 .editor-toolbar-secondary {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #e3e0ff;
-  background: #faf9ff;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fdfbff;
 }
 
 .toolbar-toggle {
-  font-size: 0.8rem;
-  line-height: 1.2;
-  padding: 0.35rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid #d3cfff;
-  background: #f6f4ff;
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9f5ff;
+  font-size: 12px;
   cursor: pointer;
   color: #4b3f72;
   font-weight: 600;

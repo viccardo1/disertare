@@ -8,6 +8,7 @@
       @toggle-ocr-panel="toggleOcrPanel"
       @toggle-page-sections-panel="togglePageSectionsPanel"
       @toggle-stats-panel="toggleStatsPanel"
+      @toggle-bio-panel="toggleBioPanel"
     />
 
     <!-- Barra superior de estadísticas rápidas -->
@@ -28,7 +29,7 @@
         />
       </div>
 
-      <!-- Sidebar derecho (citas, OCR, secciones de página, estadística...) -->
+      <!-- Sidebar derecho (citas, OCR, secciones de página, estadística, Bio...) -->
       <EditorSidebar
         :active-panel="activePanel"
         :editor="editor"
@@ -42,7 +43,7 @@
       />
     </div>
 
-    <!-- Toolbar primaria (Fx, M, Img, Tabla, Química, Slides...) -->
+    <!-- Toolbar primaria (Fx, M, Img, Tabla, Química, Bio, Slides...) -->
     <EditorToolbarPrimary
       @insert-katex="commands.insertKatex"
       @insert-mermaid="commands.insertMermaid"
@@ -54,6 +55,7 @@
       @insert-dicom="commands.insertDicom"
       @insert-geospatial="commands.insertGeo"
       @insert-chem="commands.insertChem"
+      @insert-bio-sequence="commands.insertBioSequence"
       @insert-slides="commands.insertSlides"
       @insert-citation="insertCitationFromToolbar"
       @insert-bibliography="insertBibliographyFromToolbar"
@@ -111,7 +113,13 @@ const {
 const commands = useEditorCommands(editor)
 
 /* Panel lateral activo */
-type ActivePanel = 'none' | 'references' | 'ocr' | 'pageSections' | 'stats'
+type ActivePanel =
+  | 'none'
+  | 'references'
+  | 'ocr'
+  | 'pageSections'
+  | 'stats'
+  | 'bio'
 
 const activePanel = ref<ActivePanel>('none')
 
@@ -142,6 +150,10 @@ function togglePageSectionsPanel() {
 
 function toggleStatsPanel() {
   activePanel.value = activePanel.value === 'stats' ? 'none' : 'stats'
+}
+
+function toggleBioPanel() {
+  activePanel.value = activePanel.value === 'bio' ? 'none' : 'bio'
 }
 
 function closeSidebar() {

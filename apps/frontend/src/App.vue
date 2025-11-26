@@ -1,4 +1,4 @@
-<!-- /home/vicente/Disertare/apps/frontend/src/App.vue -->
+<!-- apps/frontend/src/App.vue -->
 <template>
   <div id="app-shell">
     <header class="global-header">
@@ -6,109 +6,189 @@
         <img src="/logo.svg" alt="Disertare" class="logo" />
         <span class="brand-text">Disertare</span>
       </div>
+
       <nav class="header-nav">
         <span class="nav-item">Tablero</span>
-        <span class="nav-item">Editor</span>
+
+        <span
+          class="nav-item"
+          :class="{ 'nav-item--active': currentView === 'editor' }"
+          @click="currentView = 'editor'"
+        >
+          Editor
+        </span>
+
         <span class="nav-item">Perfil</span>
         <span class="nav-item">Repo</span>
         <span class="nav-item">Accesibilidad</span>
+
+        <span
+          class="nav-item"
+          :class="{ 'nav-item--active': currentView === 'maintenance' }"
+          @click="currentView = 'maintenance'"
+        >
+          Mantenimiento
+        </span>
       </nav>
+
       <div class="header-right">
-        <button class="auth-btn">Ingresar</button>
+        <span class="header-pill">
+          Núcleo de edición F2.x
+        </span>
+        <span class="header-pill header-pill--secondary">
+          Herramienta activa:
+          <strong>{{ herramientaActiva || 'ninguna' }}</strong>
+        </span>
       </div>
     </header>
 
-    <main class="main-content">
-      <Editor />
+    <main class="app-main">
+      <Editor v-if="currentView === 'editor'" />
+      <MaintenancePanel v-else-if="currentView === 'maintenance'" />
     </main>
 
     <footer class="global-footer">
-      <div class="footer-left">© 2025 Disertare — Todos los derechos reservados.</div>
+      <div class="footer-left">
+        <span>Disertare · Plataforma académica</span>
+      </div>
       <div class="footer-right">
-        <a href="#">Términos</a>
-        <a href="#">Sobre nosotros</a>
+        <a href="#" aria-label="Atajos de teclado">
+          Atajos
+        </a>
+        <a href="#" aria-label="Documentación de ayuda">
+          Ayuda
+        </a>
       </div>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, provide } from 'vue'
 import Editor from './editor/Editor.vue'
+import MaintenancePanel from './maintenance/MaintenancePanel.vue'
+
+/**
+ * Contexto de mantenimiento / diagnóstico:
+ * permite a cualquier componente (Editor, sidebar, toolbars, Bio, etc.)
+ * marcar qué herramienta está activa.
+ */
+const MAINTENANCE_CONTEXT_KEY = Symbol('maintenance-context')
+
+const herramientaActiva = ref<string | null>(null)
+
+interface MantenimientoContext {
+  herramientaActiva: typeof herramientaActiva
+  setHerramienta: (tool: string | null) => void
+}
+
+const mantenimientoContext: MantenimientoContext = {
+  herramientaActiva,
+  setHerramienta: (tool: string | null) => {
+    herramientaActiva.value = tool
+  },
+}
+
+provide(MAINTENANCE_CONTEXT_KEY, mantenimientoContext)
+
+// Vista actual: 'editor' o 'maintenance'
+const currentView = ref<'editor' | 'maintenance'>('editor')
 </script>
 
 <style>
 #app-shell {
   display: grid;
   grid-template-rows: 60px 1fr 40px;
-  height: 100vh;
-  font-family: 'Atkinson Hyperlegible', sans-serif;
+  min-height: 100vh;
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
   margin: 0;
-  background: white;
+  background: #ffffff;
+  color: #111827;
 }
 
 .global-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 0 16px;
-  background: #e0d6ff33;
-  border-bottom: 1px solid #ccc;
+  background: #f5f3ff;
+  border-bottom: 1px solid #e5e7eb;
   box-sizing: border-box;
 }
 
-/* ✅ Composición refinada: logo + texto como unidad de marca */
 .header-left {
   display: flex;
   align-items: center;
-  gap: 6px; /* espacio ajustado */
+  gap: 8px;
 }
 
 .logo {
-  height: 24px; /* ligeramente más pequeño para equilibrio visual */
+  width: 28px;
+  height: 28px;
 }
 
 .brand-text {
-  color: #2d2d2d;
-  font-weight: 400; /* ✅ Regular 400, según §23 */
-  font-size: 17px;
-  font-family: 'Atkinson Hyperlegible', sans-serif;
-  line-height: 1;
-  letter-spacing: -0.02em; /* ligero ajuste tipográfico */
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  color: #3730a3;
 }
 
 .header-nav {
   display: flex;
-  gap: 20px;
+  gap: 12px;
+  align-items: center;
 }
 
 .nav-item {
-  color: #333;
+  color: #4b5563;
   font-weight: 400;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 14px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .nav-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #222;
+  background: rgba(55, 48, 163, 0.08);
+  color: #312e81;
 }
 
-.auth-btn {
-  background: #e0d6ff33;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-weight: 400;
-  font-size: 14px;
+.nav-item--active {
+  background: #3730a3;
+  color: #f9fafb;
 }
 
-.main-content {
-  overflow: hidden;
+.header-right {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-pill {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-pill--secondary {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.app-main {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 .global-footer {
@@ -116,15 +196,21 @@ import Editor from './editor/Editor.vue'
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background: #e0d6ff33;
-  font-size: 14px;
-  border-top: 1px solid #ccc;
+  background: #f5f3ff;
+  font-size: 13px;
+  border-top: 1px solid #e5e7eb;
   box-sizing: border-box;
+  color: #4b5563;
 }
 
 .footer-right a {
   margin-left: 16px;
   text-decoration: none;
-  color: #333;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.footer-right a:hover {
+  text-decoration: underline;
 }
 </style>
