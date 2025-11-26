@@ -48,6 +48,14 @@
     >
       Bio (secuencias)
     </button>
+
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-circuits-panel')"
+    >
+      Circuitos
+    </button>
   </div>
 </template>
 
@@ -59,6 +67,7 @@ const emit = defineEmits<{
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
   (e: 'toggle-bio-panel'): void
+  (e: 'toggle-circuits-panel'): void
 }>()
 </script>
 

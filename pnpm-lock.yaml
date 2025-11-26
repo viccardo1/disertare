@@ -85,6 +85,9 @@ importers:
       '@disertare/editor-ext-chem':
         specifier: workspace:^
         version: link:../../packages/editor-ext-chem
+      '@disertare/editor-ext-circuits':
+        specifier: workspace:*
+        version: link:../../packages/editor-ext-circuits
       '@disertare/editor-ext-dicom':
         specifier: workspace:^
         version: link:../../packages/editor-ext-dicom
@@ -202,6 +205,18 @@ importers:
         version: 3.10.2
 
   packages/editor-ext-chem: {}
+
+  packages/editor-ext-circuits:
+    dependencies:
+      '@disertare/editor-core':
+        specifier: workspace:^
+        version: link:../editor-core
+      '@tiptap/core':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/vue-3':
+        specifier: 3.10.2
+        version: 3.10.2(@floating-ui/dom@1.7.4)(@tiptap/core@3.10.2(@tiptap/pm@3.10.2))(@tiptap/pm@3.10.2)(vue@3.5.23(typescript@5.9.3))
 
   packages/editor-ext-dicom:
     dependencies:

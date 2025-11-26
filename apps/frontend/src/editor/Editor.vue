@@ -9,6 +9,7 @@
       @toggle-page-sections-panel="togglePageSectionsPanel"
       @toggle-stats-panel="toggleStatsPanel"
       @toggle-bio-panel="toggleBioPanel"
+      @toggle-circuits-panel="toggleCircuitsPanel"
     />
 
     <!-- Barra superior de estadísticas rápidas -->
@@ -56,6 +57,7 @@
       @insert-geospatial="commands.insertGeo"
       @insert-chem="commands.insertChem"
       @insert-bio-sequence="commands.insertBioSequence"
+      @insert-circuit="commands.insertCircuit"
       @insert-slides="commands.insertSlides"
       @insert-citation="insertCitationFromToolbar"
       @insert-bibliography="insertBibliographyFromToolbar"
@@ -120,6 +122,7 @@ type ActivePanel =
   | 'pageSections'
   | 'stats'
   | 'bio'
+  | 'circuits'
 
 const activePanel = ref<ActivePanel>('none')
 
@@ -154,6 +157,10 @@ function toggleStatsPanel() {
 
 function toggleBioPanel() {
   activePanel.value = activePanel.value === 'bio' ? 'none' : 'bio'
+}
+
+function toggleCircuitsPanel() {
+  activePanel.value = activePanel.value === 'circuits' ? 'none' : 'circuits'
 }
 
 function closeSidebar() {

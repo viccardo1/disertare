@@ -21,6 +21,7 @@ import EditorOcrPanel from './EditorOcrPanel.vue'
 import EditorStatsPanel from './EditorStatsPanel.vue'
 import EditorPageSectionsPanel from './EditorPageSectionsPanel.vue'
 import EditorBioPanel from './EditorBioPanel.vue'
+import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -29,6 +30,7 @@ type ActivePanel =
   | 'pageSections'
   | 'stats'
   | 'bio'
+  | 'circuits'
 
 type CitationManager = {
   getReference: (id: string) => any
@@ -84,6 +86,8 @@ const currentPanelComponent = computed(() => {
       return EditorStatsPanel
     case 'bio':
       return EditorBioPanel
+    case 'circuits':
+      return EditorCircuitsPanel
     default:
       return null
   }
@@ -125,6 +129,12 @@ const currentPanelProps = computed(() => {
       }
 
     case 'bio':
+      return {
+        editor: props.editor,
+        onClose: () => emit('close'),
+      }
+
+    case 'circuits':
       return {
         editor: props.editor,
         onClose: () => emit('close'),

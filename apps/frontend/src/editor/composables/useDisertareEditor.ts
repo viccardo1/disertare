@@ -19,6 +19,7 @@ import { Dicom } from '@disertare/editor-ext-dicom'
 import { GeoSpatial } from '@disertare/editor-ext-geospatial'
 import { ChemExtension } from '@disertare/editor-ext-chem'
 import { BioExtension } from '@disertare/editor-ext-bio' // F2.8 Bio
+import { CircuitsExtension } from '@disertare/editor-ext-circuits' // F2.9 Circuitos
 import { Slides } from '@disertare/editor-ext-slides'
 import { StatsChartNode } from '@disertare/editor-ext-stats'
 import {
@@ -103,6 +104,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           GeoSpatial,
           ChemExtension,
           BioExtension, // F2.8 Bio integrado
+          CircuitsExtension,
           Slides,
           StatsChartNode,
 

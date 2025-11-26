@@ -27,6 +27,7 @@
     "@disertare/editor-ext-stats": "workspace:^",
     "@disertare/editor-ext-chem": "workspace:^",
     "@disertare/editor-ext-bio": "workspace:*",
+    "@disertare/editor-ext-circuits": "workspace:*",
     "@tiptap/starter-kit": "3.10.2",
     "@tiptap/vue-3": "3.10.2",
     "katex": "0.16.11",

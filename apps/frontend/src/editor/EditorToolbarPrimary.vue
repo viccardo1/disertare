@@ -103,6 +103,14 @@
       Bio
     </button>
 
+    <!-- Circuitos (F2.9) -->
+    <button
+      @click="emit('insert-circuit')"
+      :aria-label="t('editor.toolbar.circuits')"
+    >
+      Circuitos
+    </button>
+
     <!-- Slides -->
     <button
       @click="emit('insert-slides')"
@@ -128,6 +136,7 @@ const emit = defineEmits<{
   (e: 'insert-geospatial'): void
   (e: 'insert-chem'): void
   (e: 'insert-bio-sequence'): void
+  (e: 'insert-circuit'): void
   (e: 'insert-slides'): void
 }>()
 

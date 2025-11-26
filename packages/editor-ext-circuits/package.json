@@ -1,0 +1,12 @@
+{
+  "name": "@disertare/editor-ext-circuits",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "type": "module",
+  "dependencies": {
+    "@disertare/editor-core": "workspace:^",
+    "@tiptap/core": "3.10.2",
+    "@tiptap/vue-3": "3.10.2"
+  }
+}
