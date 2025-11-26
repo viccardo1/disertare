@@ -22,6 +22,7 @@ import EditorStatsPanel from './EditorStatsPanel.vue'
 import EditorPageSectionsPanel from './EditorPageSectionsPanel.vue'
 import EditorBioPanel from './EditorBioPanel.vue'
 import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
+import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -31,6 +32,7 @@ type ActivePanel =
   | 'stats'
   | 'bio'
   | 'circuits'
+  | 'pneumatics'
 
 type CitationManager = {
   getReference: (id: string) => any
@@ -48,31 +50,21 @@ const props = defineProps<{
    */
   editor: Editor | null
   citationManager: CitationManager
-  currentCitationStyle: CitationStyleId
-  citationStyles: { id: CitationStyleId; label: string }[]
+  currentCitationStyle?: CitationStyleId
+  citationStyles?: CitationStyleId[]
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'references-changed'): void
+  (e: 'update:current-citationStyle', style: CitationStyleId): void
   (e: 'insert-citation-from-panel', payload: {
     refId: string
     locator?: string
     prefix?: string
     suffix?: string
   }): void
-  // Nota: el padre escucha @update:current-citationStyle (kebab-case),
-  // así que aquí hacemos el puente desde el evento camelCase del panel.
-  (e: 'update:current-citationStyle', value: CitationStyleId): void
 }>()
-
-/**
- * Editor como Ref sólo para el panel OCR, que espera Ref<Editor | null>.
- * Es readonly, pero useEditorOcr sólo lo lee, nunca asigna editor.value.
- */
-const editorRef = computed(
-  () => props.editor,
-) as unknown as Ref<Editor | null>
 
 const currentPanelComponent = computed(() => {
   switch (props.activePanel) {
@@ -88,6 +80,8 @@ const currentPanelComponent = computed(() => {
       return EditorBioPanel
     case 'circuits':
       return EditorCircuitsPanel
+    case 'pneumatics':
+      return EditorPneumaticsPanel
     default:
       return null
   }
@@ -103,9 +97,9 @@ const currentPanelProps = computed(() => {
         // eventos del panel → EditorSidebar → Editor.vue
         onClose: () => emit('close'),
         onReferencesChanged: () => emit('references-changed'),
-        'onUpdate:currentCitationStyle': (value: CitationStyleId) =>
-          emit('update:current-citationStyle', value),
-        onInsertCitation: (payload: {
+        'onUpdate:current-citationStyle': (style: CitationStyleId) =>
+          emit('update:current-citationStyle', style),
+        onInsertCitationFromPanel: (payload: {
           refId: string
           locator?: string
           prefix?: string
@@ -115,11 +109,12 @@ const currentPanelProps = computed(() => {
 
     case 'ocr':
       return {
-        editor: editorRef,
+        editor: props.editor,
+        onClose: () => emit('close'),
       }
 
     case 'pageSections':
-      // usePageSections no necesita props, pero dejamos hook por si
+      // Por ahora PageSections no necesita props, pero dejamos hook por si
       // más adelante ligamos secciones a un editor concreto.
       return {}
 
@@ -135,6 +130,12 @@ const currentPanelProps = computed(() => {
       }
 
     case 'circuits':
+      return {
+        editor: props.editor,
+        onClose: () => emit('close'),
+      }
+
+    case 'pneumatics':
       return {
         editor: props.editor,
         onClose: () => emit('close'),

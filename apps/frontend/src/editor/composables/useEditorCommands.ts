@@ -201,6 +201,30 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
   })
 
   // ----------------------------
+  // Neumática/Hidráulica (atajo desde toolbar, F2.10)
+  // ----------------------------
+  const insertPneumaticBlock = withEditor(editor, (ed) => {
+    const id =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? (crypto as any).randomUUID()
+    : String(Date.now())
+
+    ed
+    .chain()
+    .focus()
+    .insertContent({
+      type: 'circuitDiagram',
+      attrs: {
+        id,
+        label: 'Bloque neumática/hidráulica sin título',
+        notation: '',
+        notes: '',
+      },
+    })
+    .run()
+  })
+
+  // ----------------------------
   // Slides
   // ----------------------------
   const insertSlides = withEditor(editor, (ed) => {
@@ -226,6 +250,7 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
     insertChem,
     insertBioSequence,
     insertCircuit,
+    insertPneumaticBlock,
     insertSlides,
   }
 }

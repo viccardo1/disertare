@@ -17,12 +17,12 @@
       M
     </button>
 
-    <!-- Código (Prism) -->
+    <!-- Bloque de código -->
     <button
       @click="emit('insert-code-block')"
       :aria-label="t('editor.toolbar.code')"
     >
-      <span>{ }</span>
+      Code
     </button>
 
     <!-- Tabla -->
@@ -30,16 +30,18 @@
       @click="emit('insert-table')"
       :aria-label="t('editor.toolbar.table')"
     >
-      Tbl
+      Tabla
     </button>
 
-    <!-- Cita y Bibliografía -->
+    <!-- Cita -->
     <button
       @click="emit('insert-citation')"
       :aria-label="t('editor.toolbar.citation')"
     >
       Cita
     </button>
+
+    <!-- Bibliografía -->
     <button
       @click="emit('insert-bibliography')"
       :aria-label="t('editor.toolbar.bibliography')"
@@ -111,6 +113,14 @@
       Circuitos
     </button>
 
+    <!-- Neumática / Hidráulica (F2.10) -->
+    <button
+      @click="emit('insert-pneumatics')"
+      :aria-label="t('editor.toolbar.pneumatics')"
+    >
+      Neumática / Hidráulica
+    </button>
+
     <!-- Slides -->
     <button
       @click="emit('insert-slides')"
@@ -137,6 +147,7 @@ const emit = defineEmits<{
   (e: 'insert-chem'): void
   (e: 'insert-bio-sequence'): void
   (e: 'insert-circuit'): void
+  (e: 'insert-pneumatics'): void
   (e: 'insert-slides'): void
 }>()
 
@@ -157,8 +168,7 @@ const t = (key: string) => key
   background: #ffffff;
   border-radius: 4px;
   padding: 4px 8px;
-  font-size: 13px;
-  line-height: 1;
+  font-size: 12px;
   cursor: pointer;
   color: #4b3f72;
   transition:

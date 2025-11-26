@@ -10,6 +10,7 @@
       @toggle-stats-panel="toggleStatsPanel"
       @toggle-bio-panel="toggleBioPanel"
       @toggle-circuits-panel="toggleCircuitsPanel"
+      @toggle-pneumatics-panel="togglePneumaticsPanel"
     />
 
     <!-- Barra superior de estadísticas rápidas -->
@@ -58,6 +59,7 @@
       @insert-chem="commands.insertChem"
       @insert-bio-sequence="commands.insertBioSequence"
       @insert-circuit="commands.insertCircuit"
+      @insert-pneumatics="commands.insertPneumaticBlock"
       @insert-slides="commands.insertSlides"
       @insert-citation="insertCitationFromToolbar"
       @insert-bibliography="insertBibliographyFromToolbar"
@@ -123,6 +125,7 @@ type ActivePanel =
   | 'stats'
   | 'bio'
   | 'circuits'
+  | 'pneumatics'
 
 const activePanel = ref<ActivePanel>('none')
 
@@ -161,6 +164,11 @@ function toggleBioPanel() {
 
 function toggleCircuitsPanel() {
   activePanel.value = activePanel.value === 'circuits' ? 'none' : 'circuits'
+}
+
+function togglePneumaticsPanel() {
+  activePanel.value =
+    activePanel.value === 'pneumatics' ? 'none' : 'pneumatics'
 }
 
 function closeSidebar() {
