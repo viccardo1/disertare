@@ -23,6 +23,7 @@ import EditorPageSectionsPanel from './EditorPageSectionsPanel.vue'
 import EditorBioPanel from './EditorBioPanel.vue'
 import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
 import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
+import EditorDiagramsPanel from './EditorDiagramsPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -30,6 +31,7 @@ type ActivePanel =
   | 'ocr'
   | 'pageSections'
   | 'stats'
+  | 'diagramsAdv'
   | 'bio'
   | 'circuits'
   | 'pneumatics'
@@ -50,8 +52,8 @@ const props = defineProps<{
    */
   editor: Editor | null
   citationManager: CitationManager
-  currentCitationStyle?: CitationStyleId
-  citationStyles?: CitationStyleId[]
+  currentCitationStyle: CitationStyleId
+  citationStyles: CitationStyleId[]
 }>()
 
 const emit = defineEmits<{
@@ -82,6 +84,8 @@ const currentPanelComponent = computed(() => {
       return EditorCircuitsPanel
     case 'pneumatics':
       return EditorPneumaticsPanel
+    case 'diagramsAdv':
+      return EditorDiagramsPanel
     default:
       return null
   }
@@ -114,13 +118,15 @@ const currentPanelProps = computed(() => {
       }
 
     case 'pageSections':
-      // Por ahora PageSections no necesita props, pero dejamos hook por si
-      // más adelante ligamos secciones a un editor concreto.
-      return {}
+      return {
+        editor: props.editor,
+        onClose: () => emit('close'),
+      }
 
     case 'stats':
       return {
         editor: props.editor,
+        onClose: () => emit('close'),
       }
 
     case 'bio':
@@ -136,6 +142,12 @@ const currentPanelProps = computed(() => {
       }
 
     case 'pneumatics':
+      return {
+        editor: props.editor,
+        onClose: () => emit('close'),
+      }
+
+    case 'diagramsAdv':
       return {
         editor: props.editor,
         onClose: () => emit('close'),

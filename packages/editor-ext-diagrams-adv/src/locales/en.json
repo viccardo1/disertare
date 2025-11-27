@@ -1,0 +1,15 @@
+{
+  "diagramsAdv": {
+    "panel": {
+      "title": "Advanced diagrams",
+      "subtitle": "Insert Ishikawa, Venn/Euler, risk matrix, process maps and systems models."
+    },
+    "kind": {
+      "ishikawa": "Ishikawa diagram (cause–effect)",
+      "venn": "Venn/Euler diagram",
+      "riskMatrix": "Risk matrix",
+      "processMap": "Process map",
+      "systemsModel": "Systems model / analysis"
+    }
+  }
+}

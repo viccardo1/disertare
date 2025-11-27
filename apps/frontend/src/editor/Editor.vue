@@ -8,6 +8,7 @@
       @toggle-ocr-panel="toggleOcrPanel"
       @toggle-page-sections-panel="togglePageSectionsPanel"
       @toggle-stats-panel="toggleStatsPanel"
+      @toggle-diagrams-panel="toggleDiagramsPanel"
       @toggle-bio-panel="toggleBioPanel"
       @toggle-circuits-panel="toggleCircuitsPanel"
       @toggle-pneumatics-panel="togglePneumaticsPanel"
@@ -31,7 +32,7 @@
         />
       </div>
 
-      <!-- Sidebar derecho (citas, OCR, secciones de página, estadística, Bio...) -->
+      <!-- Sidebar derecho (citas, OCR, secciones de página, estadística, Bio, Diagramas, etc.) -->
       <EditorSidebar
         :active-panel="activePanel"
         :editor="editor"
@@ -123,6 +124,7 @@ type ActivePanel =
   | 'ocr'
   | 'pageSections'
   | 'stats'
+  | 'diagramsAdv'
   | 'bio'
   | 'circuits'
   | 'pneumatics'
@@ -158,12 +160,18 @@ function toggleStatsPanel() {
   activePanel.value = activePanel.value === 'stats' ? 'none' : 'stats'
 }
 
+function toggleDiagramsPanel() {
+  activePanel.value =
+    activePanel.value === 'diagramsAdv' ? 'none' : 'diagramsAdv'
+}
+
 function toggleBioPanel() {
   activePanel.value = activePanel.value === 'bio' ? 'none' : 'bio'
 }
 
 function toggleCircuitsPanel() {
-  activePanel.value = activePanel.value === 'circuits' ? 'none' : 'circuits'
+  activePanel.value =
+    activePanel.value === 'circuits' ? 'none' : 'circuits'
 }
 
 function togglePneumaticsPanel() {

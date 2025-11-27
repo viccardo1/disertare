@@ -22,6 +22,7 @@ import { BioExtension } from '@disertare/editor-ext-bio' // F2.8 Bio
 import { CircuitsExtension } from '@disertare/editor-ext-circuits' // F2.9 Circuitos
 import { Slides } from '@disertare/editor-ext-slides'
 import { StatsChartNode } from '@disertare/editor-ext-stats'
+import { DiagramsAdvExtension } from '@disertare/editor-ext-diagrams-adv'
 import {
   CitationInline,
   Bibliography,
@@ -80,6 +81,7 @@ const safeCitationFormatter: CitationFormatter = {
  *  - F2.4: OCR on-device.
  *  - F2.3: Citas/Bibliografía.
  *  - F2.7/F2.8: Química y Bio.
+ *  - F2.11: Diagramas avanzados.
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
   onMounted(() => {
@@ -93,7 +95,9 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Image,
           Table.configure({
             resizable: true,
-            HTMLAttributes: { class: 'disertare-table' },
+            HTMLAttributes: {
+              class: 'disertare-table',
+            },
           }),
           TableRow,
           TableHeader,
@@ -107,6 +111,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           CircuitsExtension,
           Slides,
           StatsChartNode,
+          DiagramsAdvExtension,
 
           // F2.5: metadatos de secciones/encabezados/pies por sección
           PageSectionExtension.configure({
