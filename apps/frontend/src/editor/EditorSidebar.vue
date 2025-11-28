@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Ref } from 'vue'
+import { computed } from 'vue'
 import type { Editor } from '@tiptap/core'
 import type { CitationStyleId } from '@disertare/editor-citations'
 
@@ -24,6 +24,7 @@ import EditorBioPanel from './EditorBioPanel.vue'
 import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
 import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
 import EditorDiagramsPanel from './EditorDiagramsPanel.vue'
+import EditorSlidesPanel from './EditorSlidesPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -32,6 +33,7 @@ type ActivePanel =
   | 'pageSections'
   | 'stats'
   | 'diagramsAdv'
+  | 'slides'
   | 'bio'
   | 'circuits'
   | 'pneumatics'
@@ -46,10 +48,6 @@ type CitationManager = {
 
 const props = defineProps<{
   activePanel: ActivePanel
-  /**
-   * Instancia de TipTap. Puede ser null mientras el editor se inicializa,
-   * por eso aceptamos Editor | null para evitar el warning.
-   */
   editor: Editor | null
   citationManager: CitationManager
   currentCitationStyle: CitationStyleId
@@ -86,6 +84,8 @@ const currentPanelComponent = computed(() => {
       return EditorPneumaticsPanel
     case 'diagramsAdv':
       return EditorDiagramsPanel
+    case 'slides':
+      return EditorSlidesPanel
     default:
       return null
   }
@@ -98,7 +98,6 @@ const currentPanelProps = computed(() => {
         citationManager: props.citationManager,
         currentCitationStyle: props.currentCitationStyle,
         citationStyles: props.citationStyles,
-        // eventos del panel → EditorSidebar → Editor.vue
         onClose: () => emit('close'),
         onReferencesChanged: () => emit('references-changed'),
         'onUpdate:current-citationStyle': (style: CitationStyleId) =>
@@ -153,6 +152,12 @@ const currentPanelProps = computed(() => {
         onClose: () => emit('close'),
       }
 
+    case 'slides':
+      return {
+        editor: props.editor,
+        onClose: () => emit('close'),
+      }
+
     default:
       return {}
   }
@@ -168,5 +173,10 @@ const currentPanelProps = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Ajuste F2.12: que el panel siempre quepa y haga scroll */
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 </style>

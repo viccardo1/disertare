@@ -50,6 +50,15 @@
       Diagramas
     </button>
 
+    <!-- F2.12: Canvas de Presentaciones -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-slides-panel')"
+    >
+      Presentaciones
+    </button>
+
     <button
       type="button"
       class="toolbar-toggle"
@@ -84,6 +93,7 @@ const emit = defineEmits<{
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
   (e: 'toggle-diagrams-panel'): void
+  (e: 'toggle-slides-panel'): void
   (e: 'toggle-bio-panel'): void
   (e: 'toggle-circuits-panel'): void
   (e: 'toggle-pneumatics-panel'): void

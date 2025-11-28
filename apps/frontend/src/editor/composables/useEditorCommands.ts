@@ -228,11 +228,10 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
   // Slides
   // ----------------------------
   const insertSlides = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'slides',
+    ;(ed.chain().focus() as any)
+    .setSlides({
+      title: 'Presentación sin título',
+      slideCount: 3,
     })
     .run()
   })

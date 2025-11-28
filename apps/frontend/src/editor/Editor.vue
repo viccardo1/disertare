@@ -1,7 +1,7 @@
 <!-- apps/frontend/src/editor/Editor.vue -->
 <template>
   <div class="disertare-editor-shell">
-    <!-- Toolbar secundaria (superior: referencias, paginación, OCR, etc.) -->
+    <!-- Toolbar secundaria -->
     <EditorToolbarSecondary
       @toggle-references="toggleReferencesPanel"
       @toggle-paged-preview="togglePagedPreview"
@@ -9,6 +9,7 @@
       @toggle-page-sections-panel="togglePageSectionsPanel"
       @toggle-stats-panel="toggleStatsPanel"
       @toggle-diagrams-panel="toggleDiagramsPanel"
+      @toggle-slides-panel="toggleSlidesPanel"
       @toggle-bio-panel="toggleBioPanel"
       @toggle-circuits-panel="toggleCircuitsPanel"
       @toggle-pneumatics-panel="togglePneumaticsPanel"
@@ -32,7 +33,7 @@
         />
       </div>
 
-      <!-- Sidebar derecho (citas, OCR, secciones de página, estadística, Bio, Diagramas, etc.) -->
+      <!-- Sidebar derecho -->
       <EditorSidebar
         :active-panel="activePanel"
         :editor="editor"
@@ -46,7 +47,7 @@
       />
     </div>
 
-    <!-- Toolbar primaria (Fx, M, Img, Tabla, Química, Bio, Slides...) -->
+    <!-- Toolbar primaria -->
     <EditorToolbarPrimary
       @insert-katex="commands.insertKatex"
       @insert-mermaid="commands.insertMermaid"
@@ -74,21 +75,18 @@ import type { Editor } from '@tiptap/core'
 import { EditorContent } from '@tiptap/vue-3'
 import type { CitationStyleId } from '@disertare/editor-citations'
 
-/* Componentes */
 import EditorToolbarSecondary from './EditorToolbarSecondary.vue'
 import EditorToolbarPrimary from './EditorToolbarPrimary.vue'
 import EditorSidebar from './EditorSidebar.vue'
 import EditorInfoBar from './EditorInfoBar.vue'
 import EditorPagedPreview from './EditorPagedPreview.vue'
 
-/* Composables */
 import { useDisertareEditor } from './composables/useDisertareEditor'
 import { useEditorCommands } from './composables/useEditorCommands'
 import { useEditorStats } from './composables/useEditorStats'
 import { usePagedPreview } from './composables/usePagedPreview'
 import { useEditorCitations } from './composables/useEditorCitations'
 
-/* Instancia del editor */
 const editor = ref<Editor | null>(null)
 
 /* Citas / Bibliografía */
@@ -125,15 +123,14 @@ type ActivePanel =
   | 'pageSections'
   | 'stats'
   | 'diagramsAdv'
+  | 'slides'
   | 'bio'
   | 'circuits'
   | 'pneumatics'
 
 const activePanel = ref<ActivePanel>('none')
 
-/* --------------------------------------------
- * Toggle handlers (toolbar secundaria)
- * -------------------------------------------- */
+/* Toggles toolbar secundaria */
 function toggleReferencesPanel() {
   activePanel.value =
     activePanel.value === 'references' ? 'none' : 'references'
@@ -141,7 +138,6 @@ function toggleReferencesPanel() {
 
 function togglePagedPreview() {
   isPagedPreview.value = !isPagedPreview.value
-
   if (isPagedPreview.value) {
     recomputePages()
   }
@@ -165,6 +161,11 @@ function toggleDiagramsPanel() {
     activePanel.value === 'diagramsAdv' ? 'none' : 'diagramsAdv'
 }
 
+function toggleSlidesPanel() {
+  activePanel.value =
+    activePanel.value === 'slides' ? 'none' : 'slides'
+}
+
 function toggleBioPanel() {
   activePanel.value = activePanel.value === 'bio' ? 'none' : 'bio'
 }
@@ -183,12 +184,9 @@ function closeSidebar() {
   activePanel.value = 'none'
 }
 
-/* --------------------------------------------
- * Citas desde panel y toolbar
- * -------------------------------------------- */
+/* Citas desde toolbar/panel */
 function insertCitationFromToolbar() {
   const refs = citationManager.listReferences()
-
   if (!refs.length) {
     activePanel.value = 'references'
     return
@@ -200,12 +198,6 @@ function insertBibliographyFromToolbar() {
   insertBibliographyBlock()
 }
 
-/**
- * Recibe el payload completo del panel:
- *  - refId
- *  - locator (páginas)
- *  - prefix / suffix
- */
 function insertCitationFromPanel(payload: {
   refId: string
   locator?: string
@@ -220,19 +212,15 @@ function insertCitationFromPanel(payload: {
   )
 }
 
-/* Manejo de cambios en el panel de referencias */
 function onReferencesChanged() {
   forceRerenderCitationsAndBibliography()
 }
 
-/* Cambio de estilo de citas */
 function changeCitationStyle(style: CitationStyleId) {
   currentCitationStyle.value = style
 }
 
-/* --------------------------------------------
- * Inicializar editor
- * -------------------------------------------- */
+/* Inicializar editor */
 useDisertareEditor({
   editor,
   citationManager,
