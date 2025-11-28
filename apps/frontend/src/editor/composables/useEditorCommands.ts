@@ -66,9 +66,11 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
     if (!url) return
 
       // OJO: el comando se llama setImagesAdv (con "s")
-      ;(ed.chain().focus() as any).setImagesAdv({
+      ;(ed.chain().focus() as any)
+      .setImagesAdv({
         src: url,
-      }).run()
+      })
+      .run()
   })
 
   // ------------------------------------
@@ -193,6 +195,72 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
   })
 
   // ------------------------------------
+  // SVG avanzado (F2.16)
+  // ------------------------------------
+  const insertSvg = withEditor(editor, (ed) => {
+    const raw = window.prompt(
+      'Pega aquí el SVG (opcional) o deja vacío para un lienzo nuevo:',
+    )
+    const svgMarkup = raw && raw.trim().length > 0 ? raw : null
+
+    ;(ed.chain().focus() as any)
+    .setSvgAdv({
+      svgMarkup,
+      layers: [],
+      activeLayerId: null,
+      selection: { type: null, ids: [] },
+      view: {
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        showGrid: true,
+        showGuides: true,
+        snapToGrid: true,
+        snapToGuides: true,
+      },
+    })
+    .run()
+  })
+
+  const insertSvgFromFile = withEditor(editor, (ed) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/svg+xml'
+
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = () => {
+        const text = typeof reader.result === 'string' ? reader.result : ''
+  if (!text) return
+
+    ;(ed.chain().focus() as any)
+    .setSvgAdv({
+      svgMarkup: text,
+      layers: [],
+      activeLayerId: null,
+      selection: { type: null, ids: [] },
+      view: {
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        showGrid: true,
+        showGuides: true,
+        snapToGrid: true,
+        snapToGuides: true,
+      },
+    })
+    .run()
+      }
+      reader.readAsText(file, 'utf-8')
+  }
+
+  input.click()
+  })
+
+  // ------------------------------------
   // Slides (F2.12)
   // ------------------------------------
   const insertSlides = withEditor(editor, (ed) => {
@@ -216,6 +284,8 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
     insertBioSequence,
     insertCircuit,
     insertPneumaticBlock,
+    insertSvg,
+    insertSvgFromFile,
     insertSlides,
   }
 }

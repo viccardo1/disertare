@@ -100,6 +100,12 @@
         v-else-if="activePanel === 'toc'"
         :editor="editor"
       />
+
+      <EditorSvgPanel
+      v-if="activePanel === 'svg'"
+      :editor="editor"
+      />
+
     </section>
   </aside>
 </template>
@@ -121,6 +127,7 @@ import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
 import EditorScreenshotPanel from './EditorScreenshotPanel.vue'
 import EditorPartsPanel from './EditorPartsPanel.vue'
 import EditorTocPanel from './EditorTocPanel.vue'
+import EditorSvgPanel from './EditorSvgPanel.vue'
 
 type ActivePanel =
   | 'none'

@@ -24,6 +24,7 @@
     "@disertare/editor-ext-geospatial": "workspace:^",
     "@disertare/editor-ext-images": "workspace:^",
     "@disertare/editor-ext-images-adv": "workspace:*",
+    "@disertare/editor-ext-svg": "workspace:*",
     "@disertare/editor-ext-katex": "workspace:^",
     "@disertare/editor-ext-mermaid": "workspace:^",
     "@disertare/editor-ext-ocr": "workspace:^",

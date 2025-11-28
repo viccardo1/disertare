@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, markRaw, type Ref } from 'vue'
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
-
+import { SvgExtension } from '@disertare/editor-ext-svg'
 import { Katex } from '@disertare/editor-ext-katex'
 import { Prism } from '@disertare/editor-ext-prism'
 import { Mermaid } from '@disertare/editor-ext-mermaid'
@@ -99,6 +99,8 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
 
           // Imágenes avanzadas (F2.15)
           ImagesAdvExtension,
+          // SVG vector avanzado (F2.16)
+          SvgExtension,
 
           Table.configure({
             resizable: true,

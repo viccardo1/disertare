@@ -18,39 +18,12 @@
       Vista paginada
     </button>
 
-    <!-- F2.14: TOC / Índice -->
     <button
       type="button"
       class="toolbar-toggle"
       @click="emit('toggle-toc-panel')"
     >
       TOC / Índice
-    </button>
-
-    <!-- F2.13: Capturas de pantalla (abre panel) -->
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('toggle-screenshot-panel')"
-    >
-      Capturas
-    </button>
-
-    <!-- F2.13: Nueva captura directa -->
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('new-screenshot')"
-    >
-      Nueva captura
-    </button>
-
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('toggle-ocr-panel')"
-    >
-      OCR
     </button>
 
     <button
@@ -61,6 +34,7 @@
       Encabezados / pies
     </button>
 
+    <!-- Datos / Estadística -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -69,22 +43,22 @@
       Datos / Estadística
     </button>
 
-    <!-- F2.14: Partes Académicas -->
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('toggle-parts-panel')"
-    >
-      Partes académicas
-    </button>
-
-    <!-- F2.11: Diagramas avanzados -->
+    <!-- Diagramas (Mermaid, diagramas avanzados, etc.) -->
     <button
       type="button"
       class="toolbar-toggle"
       @click="emit('toggle-diagrams-panel')"
     >
       Diagramas
+    </button>
+
+    <!-- Panel lateral SVG (F2.16) -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-svg-panel')"
+    >
+      SVG
     </button>
 
     <!-- F2.12: Canvas de Presentaciones -->
@@ -96,6 +70,7 @@
       Presentaciones
     </button>
 
+    <!-- F2.7–F2.10 paneles específicos -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -119,6 +94,42 @@
     >
       Neumática / Hidráulica
     </button>
+
+    <!-- OCR -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-ocr-panel')"
+    >
+      OCR
+    </button>
+
+    <!-- F2.13: Capturas de pantalla (abre panel) -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-screenshot-panel')"
+    >
+      Capturas
+    </button>
+
+    <!-- F2.13: Nueva captura directa -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('new-screenshot')"
+    >
+      Nueva captura
+    </button>
+
+    <!-- Partes académicas -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-parts-panel')"
+    >
+      Partes académicas
+    </button>
   </div>
 </template>
 
@@ -130,6 +141,7 @@ const emit = defineEmits<{
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
   (e: 'toggle-diagrams-panel'): void
+  (e: 'toggle-svg-panel'): void
   (e: 'toggle-slides-panel'): void
   (e: 'toggle-bio-panel'): void
   (e: 'toggle-circuits-panel'): void
@@ -139,6 +151,9 @@ const emit = defineEmits<{
   (e: 'toggle-toc-panel'): void
   (e: 'new-screenshot'): void
 }>()
+
+// placeholder i18n para evitar el warning si se usa t() en el futuro
+const t = (key: string) => key
 </script>
 
 <style scoped>

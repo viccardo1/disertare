@@ -1,3 +1,4 @@
+<!-- apps/frontend/src/editor/Editor.vue -->
 <template>
   <div class="disertare-editor-shell">
     <!-- Toolbar secundaria -->
@@ -15,6 +16,7 @@
       @toggle-screenshot-panel="toggleScreenshotPanel"
       @toggle-parts-panel="togglePartsPanel"
       @toggle-toc-panel="toggleTocPanel"
+      @toggle-svg-panel="toggleSvgPanel"
       @new-screenshot="handleNewScreenshot"
     />
 
@@ -54,7 +56,7 @@
       />
     </div>
 
-        <!-- Toolbar primaria -->
+    <!-- Toolbar primaria -->
     <EditorToolbarPrimary
       @insert-katex="commands.insertKatex"
       @insert-mermaid="commands.insertMermaid"
@@ -75,8 +77,9 @@
       @insert-slides="commands.insertSlides"
       @insert-citation="insertCitationFromToolbar"
       @insert-bibliography="insertBibliographyFromToolbar"
+      @insert-svg="commands.insertSvg"
+      @upload-svg="commands.insertSvgFromFile"
     />
-
   </div>
 </template>
 
@@ -149,63 +152,29 @@ type ActivePanel =
   | 'screenshot'
   | 'parts'
   | 'toc'
+  | 'svg'
 
 const activePanel = ref<ActivePanel>('none')
 
+/* Helper genérico para toggles de panel */
+function togglePanel(panel: ActivePanel) {
+  activePanel.value = activePanel.value === panel ? 'none' : panel
+}
+
 /* Toggles toolbar secundaria */
-function toggleReferencesPanel() {
-  activePanel.value =
-    activePanel.value === 'references' ? 'none' : 'references'
-}
-
-function toggleOcrPanel() {
-  activePanel.value = activePanel.value === 'ocr' ? 'none' : 'ocr'
-}
-
-function togglePageSectionsPanel() {
-  activePanel.value =
-    activePanel.value === 'pageSections' ? 'none' : 'pageSections'
-}
-
-function toggleStatsPanel() {
-  activePanel.value = activePanel.value === 'stats' ? 'none' : 'stats'
-}
-
-function toggleDiagramsPanel() {
-  activePanel.value =
-    activePanel.value === 'diagramsAdv' ? 'none' : 'diagramsAdv'
-}
-
-function toggleSlidesPanel() {
-  activePanel.value = activePanel.value === 'slides' ? 'none' : 'slides'
-}
-
-function toggleBioPanel() {
-  activePanel.value = activePanel.value === 'bio' ? 'none' : 'bio'
-}
-
-function toggleCircuitsPanel() {
-  activePanel.value =
-    activePanel.value === 'circuits' ? 'none' : 'circuits'
-}
-
-function togglePneumaticsPanel() {
-  activePanel.value =
-    activePanel.value === 'pneumatics' ? 'none' : 'pneumatics'
-}
-
-function toggleScreenshotPanel() {
-  activePanel.value =
-    activePanel.value === 'screenshot' ? 'none' : 'screenshot'
-}
-
-function togglePartsPanel() {
-  activePanel.value = activePanel.value === 'parts' ? 'none' : 'parts'
-}
-
-function toggleTocPanel() {
-  activePanel.value = activePanel.value === 'toc' ? 'none' : 'toc'
-}
+const toggleReferencesPanel = () => togglePanel('references')
+const toggleOcrPanel = () => togglePanel('ocr')
+const togglePageSectionsPanel = () => togglePanel('pageSections')
+const toggleStatsPanel = () => togglePanel('stats')
+const toggleDiagramsPanel = () => togglePanel('diagramsAdv')
+const toggleSlidesPanel = () => togglePanel('slides')
+const toggleBioPanel = () => togglePanel('bio')
+const toggleCircuitsPanel = () => togglePanel('circuits')
+const togglePneumaticsPanel = () => togglePanel('pneumatics')
+const toggleScreenshotPanel = () => togglePanel('screenshot')
+const togglePartsPanel = () => togglePanel('parts')
+const toggleTocPanel = () => togglePanel('toc')
+const toggleSvgPanel = () => togglePanel('svg')
 
 function togglePagedPreview() {
   isPagedPreview.value = !isPagedPreview.value

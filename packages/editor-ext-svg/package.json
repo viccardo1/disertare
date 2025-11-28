@@ -1,0 +1,11 @@
+{
+  "name": "@disertare/editor-ext-svg",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@tiptap/core": "^2.0.0",
+    "@tiptap/vue-3": "^2.0.0"
+  }
+}

@@ -1,3 +1,4 @@
+<!-- apps/frontend/src/editor/EditorToolbarPrimary.vue -->
 <template>
   <div class="editor-toolbar">
     <!-- Matemáticas (KaTeX) -->
@@ -90,6 +91,23 @@
       Subir+
     </button>
 
+    <!-- SVG vector avanzado (F2.16) -->
+    <button
+      type="button"
+      @click="emit('insert-svg')"
+      :aria-label="t('editor.toolbar.svg_advanced')"
+    >
+      SVG
+    </button>
+
+    <button
+      type="button"
+      @click="emit('upload-svg')"
+      :aria-label="t('editor.toolbar.svg_upload')"
+    >
+      SVG+
+    </button>
+
     <!-- Gantt -->
     <button
       type="button"
@@ -178,7 +196,6 @@ const emit = defineEmits<{
   (e: 'insert-katex'): void
   (e: 'insert-mermaid'): void
   (e: 'insert-code-block'): void
-  (e: 'insert-table'): void
   (e: 'insert-citation'): void
   (e: 'insert-bibliography'): void
   (e: 'insert-image'): void
@@ -194,6 +211,8 @@ const emit = defineEmits<{
   (e: 'insert-circuit'): void
   (e: 'insert-pneumatics'): void
   (e: 'insert-slides'): void
+  (e: 'insert-svg'): void
+  (e: 'upload-svg'): void
 }>()
 
 // placeholder i18n
