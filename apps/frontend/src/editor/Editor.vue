@@ -13,6 +13,8 @@
       @toggle-bio-panel="toggleBioPanel"
       @toggle-circuits-panel="toggleCircuitsPanel"
       @toggle-pneumatics-panel="togglePneumaticsPanel"
+      @toggle-screenshot-panel="toggleScreenshotPanel"
+      @new-screenshot="handleNewScreenshot"
     />
 
     <!-- Barra superior de estadísticas rápidas -->
@@ -40,6 +42,10 @@
         :citation-manager="citationManager"
         :current-citation-style="currentCitationStyle"
         :citation-styles="citationStyles"
+        :is-capturing-screenshot="isCapturing"
+        :last-screenshot-data-url="lastScreenshotDataUrl"
+        :on-new-screenshot="handleNewScreenshot"
+        :on-send-screenshot-to-slide="handleSendScreenshotToSlide"
         @close="closeSidebar"
         @references-changed="onReferencesChanged"
         @update:current-citationStyle="changeCitationStyle"
@@ -70,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { Editor } from '@tiptap/core'
 import { EditorContent } from '@tiptap/vue-3'
 import type { CitationStyleId } from '@disertare/editor-citations'
@@ -86,6 +92,7 @@ import { useEditorCommands } from './composables/useEditorCommands'
 import { useEditorStats } from './composables/useEditorStats'
 import { usePagedPreview } from './composables/usePagedPreview'
 import { useEditorCitations } from './composables/useEditorCitations'
+import { useEditorScreenshot } from './composables/useEditorScreenshot' // F2.13
 
 const editor = ref<Editor | null>(null)
 
@@ -115,6 +122,13 @@ const {
 /* Toolbar primaria */
 const commands = useEditorCommands(editor)
 
+/* Captura de pantalla (F2.13) */
+const {
+  captureAndInsertScreenshot,
+  isCapturing,
+  lastScreenshotDataUrl,
+} = useEditorScreenshot(editor)
+
 /* Panel lateral activo */
 type ActivePanel =
   | 'none'
@@ -127,6 +141,7 @@ type ActivePanel =
   | 'bio'
   | 'circuits'
   | 'pneumatics'
+  | 'screenshot'
 
 const activePanel = ref<ActivePanel>('none')
 
@@ -180,9 +195,157 @@ function togglePneumaticsPanel() {
     activePanel.value === 'pneumatics' ? 'none' : 'pneumatics'
 }
 
+function toggleScreenshotPanel() {
+  activePanel.value =
+    activePanel.value === 'screenshot' ? 'none' : 'screenshot'
+}
+
 function closeSidebar() {
   activePanel.value = 'none'
 }
+
+/* Acción F2.13: Nueva captura (toolbar, panel, atajo) */
+async function handleNewScreenshot() {
+  if (isCapturing.value) return
+  await captureAndInsertScreenshot()
+}
+
+/**
+ * F2.13 + F2.12:
+ * Envía la última captura al Canvas de Presentaciones.
+ *
+ * - Si ya existe un nodo <slides>, agrega una diapositiva layout "title-image".
+ * - Si no existe, crea un deck nuevo con esa única diapositiva.
+ */
+function handleSendScreenshotToSlide() {
+  const ed = editor.value
+  if (!ed) return
+
+  const dataUrl = lastScreenshotDataUrl.value
+  if (!dataUrl) {
+    // eslint-disable-next-line no-alert
+    alert('No hay ninguna captura reciente para enviar al Canvas.')
+    return
+  }
+
+  const { state } = ed
+  let slidesPos: number | null = null
+  let slidesNode: any = null
+
+  state.doc.descendants((node: any, pos: number) => {
+    if (node.type.name === 'slides') {
+      slidesPos = pos
+      slidesNode = node
+      return false
+    }
+    return true
+  })
+
+  // Si no hay deck, creamos uno desde cero con una sola diapositiva de captura
+  if (slidesPos === null || !slidesNode) {
+    ed
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'slides',
+        attrs: {
+          title: 'Presentación sin título',
+          theme: 'default',
+          content: 'Captura de pantalla',
+          slides: JSON.stringify([
+            {
+              title: 'Captura de pantalla',
+              body: '',
+              layout: 'title-image',
+              imageUrl: dataUrl,
+            },
+          ]),
+        },
+      })
+      .run()
+    // opcional: abrir automáticamente el panel de presentaciones
+    activePanel.value = 'slides'
+    return
+  }
+
+  // Hay deck existente: añadimos la diapositiva de captura
+  let slidesArr: any[] = []
+  const existingSlides = slidesNode.attrs.slides as string | null | undefined
+
+  if (existingSlides) {
+    try {
+      const parsed = JSON.parse(existingSlides)
+      if (Array.isArray(parsed)) {
+        slidesArr = parsed
+      }
+    } catch {
+      slidesArr = []
+    }
+  }
+
+  if (!Array.isArray(slidesArr)) {
+    slidesArr = []
+  }
+
+  slidesArr.push({
+    title: 'Captura de pantalla',
+    body: '',
+    layout: 'title-image',
+    imageUrl: dataUrl,
+  })
+
+  const legacyContent =
+    slidesArr.length === 0
+      ? ''
+      : slidesArr
+          .map((s: any, index: number) => {
+            const title =
+              (s.title || `Diapositiva ${index + 1}`).trim()
+            const body = (s.body || '').trim()
+            if (!body) return title
+            return `${title}\n${body}`
+          })
+          .join('\n---\n')
+
+  const newAttrs = {
+    ...slidesNode.attrs,
+    slides: JSON.stringify(slidesArr),
+    content: legacyContent,
+  }
+
+  ed
+    .chain()
+    .focus()
+    .command(({ tr }) => {
+      tr.setNodeMarkup(
+        slidesPos as number,
+        slidesNode.type,
+        newAttrs,
+      )
+      return true
+    })
+    .run()
+
+  // Opcional: cambiar al panel de Slides para que el usuario vea el resultado
+  activePanel.value = 'slides'
+}
+
+/* Atajo de teclado F2.13: Ctrl+Shift+S / Cmd+Shift+S */
+function onGlobalKeydown(e: KeyboardEvent) {
+  const isCtrlOrCmd = e.ctrlKey || e.metaKey
+  if (isCtrlOrCmd && e.shiftKey && e.code === 'KeyS') {
+    e.preventDefault()
+    handleNewScreenshot()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onGlobalKeydown)
+})
 
 /* Citas desde toolbar/panel */
 function insertCitationFromToolbar() {

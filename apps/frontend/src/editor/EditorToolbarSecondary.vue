@@ -17,6 +17,24 @@
       Vista paginada
     </button>
 
+    <!-- F2.13: Capturas de pantalla (abre panel) -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-screenshot-panel')"
+    >
+      Capturas
+    </button>
+
+    <!-- F2.13: Nueva captura directa -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('new-screenshot')"
+    >
+      Nueva captura
+    </button>
+
     <button
       type="button"
       class="toolbar-toggle"
@@ -97,6 +115,8 @@ const emit = defineEmits<{
   (e: 'toggle-bio-panel'): void
   (e: 'toggle-circuits-panel'): void
   (e: 'toggle-pneumatics-panel'): void
+  (e: 'toggle-screenshot-panel'): void
+  (e: 'new-screenshot'): void
 }>()
 </script>
 

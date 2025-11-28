@@ -1,13 +1,94 @@
 <!-- apps/frontend/src/editor/EditorSidebar.vue -->
 <template>
   <aside
-    v-if="activePanel !== 'none' && currentPanelComponent"
+    v-if="activePanel !== 'none'"
     class="editor-sidebar"
+    aria-label="Panel de herramientas"
   >
-    <component
-      :is="currentPanelComponent"
-      v-bind="currentPanelProps"
-    />
+    <header class="editor-sidebar__header">
+      <h2 class="editor-sidebar__title">
+        {{ currentTitle }}
+      </h2>
+
+      <button
+        type="button"
+        class="editor-sidebar__close"
+        @click="emit('close')"
+        aria-label="Cerrar panel de herramientas"
+      >
+        ✕
+      </button>
+    </header>
+
+    <section class="editor-sidebar__body">
+      <!-- Referencias / Gestor de citas -->
+      <EditorReferencesPanel
+        v-if="activePanel === 'references'"
+        :citation-manager="citationManager"
+        :current-citation-style="currentCitationStyle ?? 'apa'"
+        :citation-styles="citationStyles"
+        @references-changed="emit('references-changed')"
+        @update:current-citationStyle="onUpdateCitationStyle"
+        @insert-citation-from-panel="(payload) => emit('insert-citation-from-panel', payload)"
+      />
+
+      <!-- OCR -->
+      <EditorOcrPanel
+        v-else-if="activePanel === 'ocr'"
+        :editor="editor"
+      />
+
+      <!-- Encabezados / Pies -->
+      <EditorPageSectionsPanel
+        v-else-if="activePanel === 'pageSections'"
+        :editor="editor"
+      />
+
+      <!-- Datos / Estadística -->
+      <EditorStatsPanel
+        v-else-if="activePanel === 'stats'"
+        :editor="editor"
+      />
+
+      <!-- Diagramas avanzados -->
+      <EditorDiagramsPanel
+        v-else-if="activePanel === 'diagramsAdv'"
+        :editor="editor"
+      />
+
+      <!-- Presentaciones / Canvas de diapositivas -->
+      <EditorSlidesPanel
+        v-else-if="activePanel === 'slides'"
+        :editor="editor"
+      />
+
+      <!-- Bio (secuencias) -->
+      <EditorBioPanel
+        v-else-if="activePanel === 'bio'"
+        :editor="editor"
+      />
+
+      <!-- Circuitos -->
+      <EditorCircuitsPanel
+        v-else-if="activePanel === 'circuits'"
+        :editor="editor"
+      />
+
+      <!-- Neumática / Hidráulica -->
+      <EditorPneumaticsPanel
+        v-else-if="activePanel === 'pneumatics'"
+        :editor="editor"
+      />
+
+      <!-- Capturas de pantalla (F2.13) -->
+      <EditorScreenshotPanel
+        v-else-if="activePanel === 'screenshot'"
+        :is-capturing="!!isCapturingScreenshot"
+        :last-screenshot-data-url="lastScreenshotDataUrl"
+        @new-screenshot="handleNewScreenshotFromPanel"
+        @send-to-slide="handleSendToSlideFromPanel"
+      />
+    </section>
   </aside>
 </template>
 
@@ -18,13 +99,14 @@ import type { CitationStyleId } from '@disertare/editor-citations'
 
 import EditorReferencesPanel from './EditorReferencesPanel.vue'
 import EditorOcrPanel from './EditorOcrPanel.vue'
-import EditorStatsPanel from './EditorStatsPanel.vue'
 import EditorPageSectionsPanel from './EditorPageSectionsPanel.vue'
+import EditorStatsPanel from './EditorStatsPanel.vue'
+import EditorDiagramsPanel from './EditorDiagramsPanel.vue'
+import EditorSlidesPanel from './EditorSlidesPanel.vue'
 import EditorBioPanel from './EditorBioPanel.vue'
 import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
 import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
-import EditorDiagramsPanel from './EditorDiagramsPanel.vue'
-import EditorSlidesPanel from './EditorSlidesPanel.vue'
+import EditorScreenshotPanel from './EditorScreenshotPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -37,27 +119,27 @@ type ActivePanel =
   | 'bio'
   | 'circuits'
   | 'pneumatics'
-
-type CitationManager = {
-  getReference: (id: string) => any
-  listReferences: () => any[]
-  addReference?: (ref: any) => void
-  updateReference?: (ref: any) => void
-  removeReference?: (id: string) => void
-}
+  | 'screenshot'
 
 const props = defineProps<{
   activePanel: ActivePanel
   editor: Editor | null
-  citationManager: CitationManager
-  currentCitationStyle: CitationStyleId
-  citationStyles: CitationStyleId[]
+  citationManager: {
+    getReference: (id: string) => any
+    listReferences: () => any[]
+  }
+  currentCitationStyle: CitationStyleId | null
+  citationStyles: { id: CitationStyleId; label: string }[]
+  isCapturingScreenshot?: boolean
+  lastScreenshotDataUrl?: string | null
+  onNewScreenshot?: () => void
+  onSendScreenshotToSlide?: () => void
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'references-changed'): void
-  (e: 'update:current-citationStyle', style: CitationStyleId): void
+  (e: 'update:current-citationStyle', value: CitationStyleId): void
   (e: 'insert-citation-from-panel', payload: {
     refId: string
     locator?: string
@@ -66,117 +148,84 @@ const emit = defineEmits<{
   }): void
 }>()
 
-const currentPanelComponent = computed(() => {
-  switch (props.activePanel) {
-    case 'references':
-      return EditorReferencesPanel
-    case 'ocr':
-      return EditorOcrPanel
-    case 'pageSections':
-      return EditorPageSectionsPanel
-    case 'stats':
-      return EditorStatsPanel
-    case 'bio':
-      return EditorBioPanel
-    case 'circuits':
-      return EditorCircuitsPanel
-    case 'pneumatics':
-      return EditorPneumaticsPanel
-    case 'diagramsAdv':
-      return EditorDiagramsPanel
-    case 'slides':
-      return EditorSlidesPanel
-    default:
-      return null
+function onUpdateCitationStyle(style: CitationStyleId) {
+  emit('update:current-citationStyle', style)
+}
+
+function handleNewScreenshotFromPanel() {
+  if (props.onNewScreenshot) {
+    props.onNewScreenshot()
   }
-})
+}
 
-const currentPanelProps = computed(() => {
-  switch (props.activePanel) {
-    case 'references':
-      return {
-        citationManager: props.citationManager,
-        currentCitationStyle: props.currentCitationStyle,
-        citationStyles: props.citationStyles,
-        onClose: () => emit('close'),
-        onReferencesChanged: () => emit('references-changed'),
-        'onUpdate:current-citationStyle': (style: CitationStyleId) =>
-          emit('update:current-citationStyle', style),
-        onInsertCitationFromPanel: (payload: {
-          refId: string
-          locator?: string
-          prefix?: string
-          suffix?: string
-        }) => emit('insert-citation-from-panel', payload),
-      }
-
-    case 'ocr':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'pageSections':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'stats':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'bio':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'circuits':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'pneumatics':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'diagramsAdv':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    case 'slides':
-      return {
-        editor: props.editor,
-        onClose: () => emit('close'),
-      }
-
-    default:
-      return {}
+function handleSendToSlideFromPanel() {
+  if (props.onSendScreenshotToSlide) {
+    props.onSendScreenshotToSlide()
   }
+}
+
+const titles: Record<Exclude<ActivePanel, 'none'>, string> = {
+  references: 'Gestor de citas',
+  ocr: 'OCR',
+  pageSections: 'Encabezados / pies',
+  stats: 'Datos / Estadística',
+  diagramsAdv: 'Diagramas avanzados',
+  slides: 'Canvas de presentaciones',
+  bio: 'Bio (secuencias)',
+  circuits: 'Circuitos',
+  pneumatics: 'Neumática / Hidráulica',
+  screenshot: 'Capturas de pantalla',
+}
+
+const currentTitle = computed(() => {
+  if (props.activePanel === 'none') return ''
+  return titles[props.activePanel] ?? ''
 })
 </script>
 
 <style scoped>
 .editor-sidebar {
   width: 320px;
+  max-width: 40%;
   border-left: 1px solid #e5e7eb;
-  padding: 8px;
-  background: #f9fafb;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  /* Ajuste F2.12: que el panel siempre quepa y haga scroll */
-  height: 100%;
   min-height: 0;
-  box-sizing: border-box;
-  overflow-y: auto;
+}
+
+.editor-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.editor-sidebar__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  color: #4b3f72;
+}
+
+.editor-sidebar__close {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 2px 4px;
+}
+
+.editor-sidebar__close:hover {
+  color: #111827;
+}
+
+.editor-sidebar__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 </style>
