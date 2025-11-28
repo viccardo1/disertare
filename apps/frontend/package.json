@@ -1,4 +1,4 @@
-{
+  {
   "name": "@disertare/frontend",
   "version": "0.0.0",
   "private": true,
@@ -12,6 +12,8 @@
   "dependencies": {
     "@disertare/editor-citations": "workspace:^",
     "@disertare/editor-core": "workspace:^",
+    "@disertare/editor-parts": "workspace:^",
+    "@disertare/editor-toc": "workspace:^",
     "@disertare/editor-ext-bio": "workspace:*",
     "@disertare/editor-ext-cad": "workspace:^",
     "@disertare/editor-ext-chem": "workspace:^",

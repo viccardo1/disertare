@@ -127,6 +127,12 @@ importers:
       '@disertare/editor-ext-tables':
         specifier: workspace:^
         version: link:../../packages/editor-ext-tables
+      '@disertare/editor-parts':
+        specifier: workspace:^
+        version: link:../../packages/editor-parts
+      '@disertare/editor-toc':
+        specifier: workspace:^
+        version: link:../../packages/editor-toc
       '@tiptap/starter-kit':
         specifier: 3.10.2
         version: 3.10.2
@@ -378,6 +384,30 @@ importers:
         version: 3.5.23(typescript@5.9.3)
 
   packages/editor-ext-tables:
+    dependencies:
+      '@disertare/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@tiptap/core':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/pm':
+        specifier: 3.10.2
+        version: 3.10.2
+
+  packages/editor-parts:
+    dependencies:
+      '@disertare/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@tiptap/core':
+        specifier: 3.10.2
+        version: 3.10.2(@tiptap/pm@3.10.2)
+      '@tiptap/pm':
+        specifier: 3.10.2
+        version: 3.10.2
+
+  packages/editor-toc:
     dependencies:
       '@disertare/editor-core':
         specifier: workspace:*

@@ -14,6 +14,8 @@
       @toggle-circuits-panel="toggleCircuitsPanel"
       @toggle-pneumatics-panel="togglePneumaticsPanel"
       @toggle-screenshot-panel="toggleScreenshotPanel"
+      @toggle-parts-panel="togglePartsPanel"
+      @toggle-toc-panel="toggleTocPanel"
       @new-screenshot="handleNewScreenshot"
     />
 
@@ -142,6 +144,8 @@ type ActivePanel =
   | 'circuits'
   | 'pneumatics'
   | 'screenshot'
+  | 'parts'
+  | 'toc'
 
 const activePanel = ref<ActivePanel>('none')
 
@@ -198,6 +202,14 @@ function togglePneumaticsPanel() {
 function toggleScreenshotPanel() {
   activePanel.value =
     activePanel.value === 'screenshot' ? 'none' : 'screenshot'
+}
+
+function togglePartsPanel() {
+  activePanel.value = activePanel.value === 'parts' ? 'none' : 'parts'
+}
+
+function toggleTocPanel() {
+  activePanel.value = activePanel.value === 'toc' ? 'none' : 'toc'
 }
 
 function closeSidebar() {

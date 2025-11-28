@@ -1,6 +1,7 @@
 <!-- apps/frontend/src/editor/EditorToolbarSecondary.vue -->
 <template>
   <div class="editor-toolbar-secondary">
+    <!-- Paneles generales / modos -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -15,6 +16,15 @@
       @click="emit('toggle-paged-preview')"
     >
       Vista paginada
+    </button>
+
+    <!-- F2.14: TOC / Índice -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-toc-panel')"
+    >
+      TOC / Índice
     </button>
 
     <!-- F2.13: Capturas de pantalla (abre panel) -->
@@ -57,6 +67,15 @@
       @click="emit('toggle-stats-panel')"
     >
       Datos / Estadística
+    </button>
+
+    <!-- F2.14: Partes Académicas -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-parts-panel')"
+    >
+      Partes académicas
     </button>
 
     <!-- F2.11: Diagramas avanzados -->
@@ -116,6 +135,8 @@ const emit = defineEmits<{
   (e: 'toggle-circuits-panel'): void
   (e: 'toggle-pneumatics-panel'): void
   (e: 'toggle-screenshot-panel'): void
+  (e: 'toggle-parts-panel'): void
+  (e: 'toggle-toc-panel'): void
   (e: 'new-screenshot'): void
 }>()
 </script>

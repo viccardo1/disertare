@@ -88,6 +88,18 @@
         @new-screenshot="handleNewScreenshotFromPanel"
         @send-to-slide="handleSendToSlideFromPanel"
       />
+
+      <!-- F2.14: Partes Académicas -->
+      <EditorPartsPanel
+        v-else-if="activePanel === 'parts'"
+        :editor="editor"
+      />
+
+      <!-- F2.14: TOC / Índice -->
+      <EditorTocPanel
+        v-else-if="activePanel === 'toc'"
+        :editor="editor"
+      />
     </section>
   </aside>
 </template>
@@ -107,6 +119,8 @@ import EditorBioPanel from './EditorBioPanel.vue'
 import EditorCircuitsPanel from './EditorCircuitsPanel.vue'
 import EditorPneumaticsPanel from './EditorPneumaticsPanel.vue'
 import EditorScreenshotPanel from './EditorScreenshotPanel.vue'
+import EditorPartsPanel from './EditorPartsPanel.vue'
+import EditorTocPanel from './EditorTocPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -120,6 +134,8 @@ type ActivePanel =
   | 'circuits'
   | 'pneumatics'
   | 'screenshot'
+  | 'parts'
+  | 'toc'
 
 const props = defineProps<{
   activePanel: ActivePanel
@@ -175,6 +191,8 @@ const titles: Record<Exclude<ActivePanel, 'none'>, string> = {
   circuits: 'Circuitos',
   pneumatics: 'Neumática / Hidráulica',
   screenshot: 'Capturas de pantalla',
+  parts: 'Partes académicas',
+  toc: 'TOC / Índice',
 }
 
 const currentTitle = computed(() => {
