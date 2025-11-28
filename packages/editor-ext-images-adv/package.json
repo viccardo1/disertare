@@ -1,0 +1,13 @@
+{
+  "name": "@disertare/editor-ext-images-adv",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "disertareBrand": {
+    "module": "editor",
+    "scope": "extension",
+    "feature": "images-adv",
+    "phase": "F2.15"
+  }
+}

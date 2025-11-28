@@ -64,6 +64,15 @@
         >
           ✂
         </button>
+
+        <!-- F2.15: botón para abrir el editor raster avanzado -->
+        <button
+          class="control-btn advanced"
+          :aria-label="t('editor.ext.images.open_advanced')"
+          @click.stop="openAdvancedEditor"
+        >
+          ★
+        </button>
       </div>
     </div>
   </NodeViewWrapper>
@@ -99,7 +108,9 @@ const t = (key: string) => key
 const imageStyle = computed(() => ({
   width: width.value,
   height: height.value,
-  transform: `rotate(${rotation.value}deg) scaleX(${isFlippedX.value ? -1 : 1}) scaleY(${isFlippedY.value ? -1 : 1})`,
+  transform: `rotate(${rotation.value}deg) scaleX(${
+    isFlippedX.value ? -1 : 1
+  }) scaleY(${isFlippedY.value ? -1 : 1})`,
   transformOrigin: 'center',
   display: inline.value ? 'inline-block' : 'block',
 }))
@@ -168,7 +179,19 @@ const startResize = (e: MouseEvent) => {
 }
 
 const openCrop = () => {
-  console.log('[editor-ext-images] crop not implemented in F2')
+  // En F2.x básico el recorte completo se delega al módulo avanzado.
+  // Aquí mantenemos el placeholder para compatibilidad.
+  console.log('[editor-ext-images] crop not implemented in F2 (usar editor avanzado)')
+}
+
+/**
+ * F2.15: convierte este nodo <image> en un nodo <imagesAdv>.
+ */
+const openAdvancedEditor = () => {
+  const commands: any = props.editor.commands
+  if (commands && typeof commands.convertImageToImagesAdv === 'function') {
+    commands.convertImageToImagesAdv()
+  }
 }
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -254,6 +277,16 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.control-btn.advanced {
+  background: #4b3f72;
+  color: #ffffff;
+  border-color: #4b3f72;
+}
+
+.control-btn.advanced:hover {
+  background: #433266;
 }
 
 .control-btn:hover {

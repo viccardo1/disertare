@@ -1,8 +1,8 @@
-<!-- apps/frontend/src/editor/EditorToolbarPrimary.vue -->
 <template>
   <div class="editor-toolbar">
-    <!-- Matemáticas -->
+    <!-- Matemáticas (KaTeX) -->
     <button
+      type="button"
       @click="emit('insert-katex')"
       :aria-label="t('editor.toolbar.katex')"
     >
@@ -11,14 +11,16 @@
 
     <!-- Diagramas Mermaid -->
     <button
+      type="button"
       @click="emit('insert-mermaid')"
       :aria-label="t('editor.toolbar.mermaid')"
     >
       M
     </button>
 
-    <!-- Bloque de código -->
+    <!-- Bloque de código / Prism -->
     <button
+      type="button"
       @click="emit('insert-code-block')"
       :aria-label="t('editor.toolbar.code')"
     >
@@ -27,6 +29,7 @@
 
     <!-- Tabla -->
     <button
+      type="button"
       @click="emit('insert-table')"
       :aria-label="t('editor.toolbar.table')"
     >
@@ -35,6 +38,7 @@
 
     <!-- Cita -->
     <button
+      type="button"
       @click="emit('insert-citation')"
       :aria-label="t('editor.toolbar.citation')"
     >
@@ -43,22 +47,52 @@
 
     <!-- Bibliografía -->
     <button
+      type="button"
       @click="emit('insert-bibliography')"
       :aria-label="t('editor.toolbar.bibliography')"
     >
       Biblio
     </button>
 
-    <!-- Imagen -->
+    <!-- Imagen estándar por URL -->
     <button
+      type="button"
       @click="emit('insert-image')"
       :aria-label="t('editor.toolbar.image')"
     >
       Img
     </button>
 
+    <!-- Imagen estándar desde archivo local -->
+    <button
+      type="button"
+      @click="emit('upload-image')"
+      :aria-label="t('editor.toolbar.image_upload')"
+    >
+      Subir
+    </button>
+
+    <!-- Imagen avanzada (F2.15) por URL -->
+    <button
+      type="button"
+      @click="emit('insert-image-adv')"
+      :aria-label="t('editor.toolbar.image_advanced')"
+    >
+      Img+
+    </button>
+
+    <!-- Imagen avanzada desde archivo local -->
+    <button
+      type="button"
+      @click="emit('upload-image-adv')"
+      :aria-label="t('editor.toolbar.image_advanced_upload')"
+    >
+      Subir+
+    </button>
+
     <!-- Gantt -->
     <button
+      type="button"
       @click="emit('insert-gantt')"
       :aria-label="t('editor.toolbar.gantt')"
     >
@@ -67,6 +101,7 @@
 
     <!-- CAD -->
     <button
+      type="button"
       @click="emit('insert-cad')"
       :aria-label="t('editor.toolbar.cad')"
     >
@@ -75,30 +110,34 @@
 
     <!-- DICOM -->
     <button
+      type="button"
       @click="emit('insert-dicom')"
       :aria-label="t('editor.toolbar.dicom')"
     >
       DICOM
     </button>
 
-    <!-- Geo -->
+    <!-- Geoespacial -->
     <button
+      type="button"
       @click="emit('insert-geospatial')"
       :aria-label="t('editor.toolbar.geospatial')"
     >
       Geo
     </button>
 
-    <!-- Química -->
+    <!-- Química (F2.7) -->
     <button
+      type="button"
       @click="emit('insert-chem')"
       :aria-label="t('editor.toolbar.chem')"
     >
-      Química
+      Chem
     </button>
 
     <!-- Bio (F2.8) -->
     <button
+      type="button"
       @click="emit('insert-bio-sequence')"
       :aria-label="t('editor.toolbar.bio')"
     >
@@ -107,22 +146,25 @@
 
     <!-- Circuitos (F2.9) -->
     <button
+      type="button"
       @click="emit('insert-circuit')"
       :aria-label="t('editor.toolbar.circuits')"
     >
-      Circuitos
+      Circuits
     </button>
 
     <!-- Neumática / Hidráulica (F2.10) -->
     <button
+      type="button"
       @click="emit('insert-pneumatics')"
       :aria-label="t('editor.toolbar.pneumatics')"
     >
-      Neumática / Hidráulica
+      Pneum.
     </button>
 
-    <!-- Slides -->
+    <!-- Slides (F2.12) -->
     <button
+      type="button"
       @click="emit('insert-slides')"
       :aria-label="t('editor.toolbar.slides')"
     >
@@ -140,6 +182,9 @@ const emit = defineEmits<{
   (e: 'insert-citation'): void
   (e: 'insert-bibliography'): void
   (e: 'insert-image'): void
+  (e: 'upload-image'): void
+  (e: 'insert-image-adv'): void
+  (e: 'upload-image-adv'): void
   (e: 'insert-gantt'): void
   (e: 'insert-cad'): void
   (e: 'insert-dicom'): void

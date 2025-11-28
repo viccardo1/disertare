@@ -18,222 +18,185 @@ function withEditor(editor: Ref<Editor | null>, fn: (editor: Editor) => void) {
 }
 
 export function useEditorCommands(editor: Ref<Editor | null>) {
-  // ----------------------------
+  // ------------------------------------
   // KaTeX
-  // ----------------------------
+  // ------------------------------------
   const insertKatex = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({ type: 'katex' })
-    .run()
+    ed.chain().focus().insertContent({ type: 'katex' }).run()
   })
 
-  // ----------------------------
+  // ------------------------------------
   // Mermaid
-  // ----------------------------
+  // ------------------------------------
   const insertMermaid = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'mermaid',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'mermaid' }).run()
   })
 
-  // ----------------------------
-  // Bloque de código (Prism)
-  // ----------------------------
+  // ------------------------------------
+  // Código / Prism
+  // ------------------------------------
   const insertCodeBlock = withEditor(editor, (ed) => {
     ed
     .chain()
     .focus()
     .insertContent({
       type: 'prism',
-      attrs: {
-        language: 'plaintext',
-      },
+      attrs: { language: 'plaintext' },
     })
     .run()
   })
 
-  // ----------------------------
-  // Imagen (vía URL, F2.x)
-  // ----------------------------
+  // ------------------------------------
+  // Imagen por URL (simple)
+  // ------------------------------------
   const insertImage = withEditor(editor, (ed) => {
     const url = window.prompt('URL de la imagen (http/https):')
-    if (!url) {
-      return
-    }
+    if (!url) return
 
-    // Usamos el comando oficial de la extensión Image (basado en TipTap)
-    // en lugar de insertar un nodo vacío que marca error.
-    ;(ed.chain().focus() as any).setImage({ src: url }).run()
+      ;(ed.chain().focus() as any).setImage({ src: url }).run()
   })
 
-  // ----------------------------
+  // ------------------------------------
+  // Imagen avanzada por URL (F2.15)
+  // ------------------------------------
+  const insertAdvancedImage = withEditor(editor, (ed) => {
+    const url = window.prompt(
+      'URL de la imagen avanzada (http/https o data URL):',
+    )
+    if (!url) return
+
+      // OJO: el comando se llama setImagesAdv (con "s")
+      ;(ed.chain().focus() as any).setImagesAdv({
+        src: url,
+      }).run()
+  })
+
+  // ------------------------------------
+  // Imagen desde archivo local (simple)
+  // ------------------------------------
+  const insertImageFromLocal = withEditor(editor, (ed) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result
+        if (typeof result !== 'string') return
+
+          ;(ed.chain().focus() as any)
+          .setImage({ src: result })
+          .run()
+      }
+      reader.readAsDataURL(file)
+  }
+
+  input.click()
+  })
+
+  // ------------------------------------
+  // Imagen avanzada desde archivo local (F2.15)
+  // ------------------------------------
+  const insertAdvancedImageFromLocal = withEditor(editor, (ed) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result
+        if (typeof result !== 'string') return
+
+          ;(ed.chain().focus() as any)
+          .setImagesAdv({ src: result })
+          .run()
+      }
+      reader.readAsDataURL(file)
+  }
+
+  input.click()
+  })
+
+  // ------------------------------------
   // Tabla
-  // ----------------------------
+  // ------------------------------------
   const insertTable = withEditor(editor, (ed) => {
     ed
     .chain()
     .focus()
-    .insertTable({
-      rows: 3,
-      cols: 3,
-      withHeaderRow: true,
-    })
+    .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
     .run()
   })
 
-  // ----------------------------
+  // ------------------------------------
   // Gantt
-  // ----------------------------
+  // ------------------------------------
   const insertGantt = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'gantt',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'gantt' }).run()
   })
 
-  // ----------------------------
+  // ------------------------------------
   // CAD
-  // ----------------------------
+  // ------------------------------------
   const insertCad = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'cad',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'cad' }).run()
   })
 
-  // ----------------------------
+  // ------------------------------------
   // DICOM
-  // ----------------------------
+  // ------------------------------------
   const insertDicom = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'dicom',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'dicom' }).run()
   })
 
-  // ----------------------------
-  // Geo
-  // ----------------------------
+  // ------------------------------------
+  // Geoespacial
+  // ------------------------------------
   const insertGeo = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'geo',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'geospatial' }).run()
   })
 
-  // ----------------------------
-  // Química
-  // ----------------------------
+  // ------------------------------------
+  // Química (F2.7)
+  // ------------------------------------
   const insertChem = withEditor(editor, (ed) => {
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'chem',
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'chem' }).run()
   })
 
-  // ----------------------------
-  // Bio (atajo desde toolbar)
-  // ----------------------------
+  // ------------------------------------
+  // Bio (F2.8)
+  // ------------------------------------
   const insertBioSequence = withEditor(editor, (ed) => {
-    const id =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? (crypto as any).randomUUID()
-    : String(Date.now())
-
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'bioSequence',
-      attrs: {
-        id,
-        kind: 'dna',
-        label: 'Secuencia sin título',
-        sequence: 'ATGC',
-      },
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'bioSequence' }).run()
   })
 
-  // ----------------------------
-  // Circuitos (atajo desde toolbar)
-  // ----------------------------
+  // ------------------------------------
+  // Circuitos (F2.9)
+  // ------------------------------------
   const insertCircuit = withEditor(editor, (ed) => {
-    const id =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? (crypto as any).randomUUID()
-    : String(Date.now())
-
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'circuitDiagram',
-      attrs: {
-        id,
-        label: 'Circuito sin título',
-        notation: '',
-        notes: '',
-      },
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'circuit' }).run()
   })
 
-  // ----------------------------
-  // Neumática/Hidráulica (atajo desde toolbar, F2.10)
-  // ----------------------------
+  // ------------------------------------
+  // Neumática / Hidráulica (F2.10)
+  // ------------------------------------
   const insertPneumaticBlock = withEditor(editor, (ed) => {
-    const id =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? (crypto as any).randomUUID()
-    : String(Date.now())
-
-    ed
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'circuitDiagram',
-      attrs: {
-        id,
-        label: 'Bloque neumática/hidráulica sin título',
-        notation: '',
-        notes: '',
-      },
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'pneumaticBlock' }).run()
   })
 
-  // ----------------------------
-  // Slides
-  // ----------------------------
+  // ------------------------------------
+  // Slides (F2.12)
+  // ------------------------------------
   const insertSlides = withEditor(editor, (ed) => {
-    ;(ed.chain().focus() as any)
-    .setSlides({
-      title: 'Presentación sin título',
-      slideCount: 3,
-    })
-    .run()
+    ed.chain().focus().insertContent({ type: 'slidesDeck' }).run()
   })
 
   return {
@@ -241,6 +204,9 @@ export function useEditorCommands(editor: Ref<Editor | null>) {
     insertMermaid,
     insertCodeBlock,
     insertImage,
+    insertAdvancedImage,
+    insertImageFromLocal,
+    insertAdvancedImageFromLocal,
     insertTable,
     insertGantt,
     insertCad,

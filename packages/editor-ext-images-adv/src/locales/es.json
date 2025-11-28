@@ -1,0 +1,19 @@
+{
+  "editor.ext.imagesAdv.edit_image_advanced": "Editar imagen (raster avanzado)",
+  "editor.ext.imagesAdv.tool.brush": "Pincel",
+  "editor.ext.imagesAdv.tool.eraser": "Borrador",
+  "editor.ext.imagesAdv.tool.eyedropper": "Cuentagotas",
+  "editor.ext.imagesAdv.tool.selectRect": "Selección rectangular",
+  "editor.ext.imagesAdv.tool.lasso": "Lazo",
+  "editor.ext.imagesAdv.tool.text": "Texto",
+  "editor.ext.imagesAdv.brush.size": "Tamaño",
+  "editor.ext.imagesAdv.brush.opacity": "Opacidad",
+  "editor.ext.imagesAdv.adjust.brightness": "Brillo",
+  "editor.ext.imagesAdv.adjust.contrast": "Contraste",
+  "editor.ext.imagesAdv.adjust.saturation": "Saturación",
+  "editor.ext.imagesAdv.filter.blur": "Desenfoque",
+  "editor.ext.imagesAdv.action.autoEnhance": "Automejorar",
+  "editor.ext.imagesAdv.action.reset": "Restablecer",
+  "editor.ext.imagesAdv.export.removeExif": "Remover metadata EXIF al exportar",
+  "editor.ext.imagesAdv.export.webp": "Exportar a WebP"
+}

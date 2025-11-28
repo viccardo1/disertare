@@ -1,4 +1,3 @@
-// apps/frontend/src/editor/composables/useDisertareEditor.ts
 import { onMounted, onUnmounted, markRaw, type Ref } from 'vue'
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
@@ -7,6 +6,7 @@ import { Katex } from '@disertare/editor-ext-katex'
 import { Prism } from '@disertare/editor-ext-prism'
 import { Mermaid } from '@disertare/editor-ext-mermaid'
 import { Image } from '@disertare/editor-ext-images'
+import { ImagesAdvExtension } from '@disertare/editor-ext-images-adv'
 import {
   Table,
   TableRow,
@@ -82,6 +82,7 @@ const safeCitationFormatter: CitationFormatter = {
  *  - F2.3: Citas/Bibliografía.
  *  - F2.7/F2.8: Química y Bio.
  *  - F2.11: Diagramas avanzados.
+ *  - F2.15: Imágenes avanzadas (raster) — editor-ext-images-adv.
  */
 export function useDisertareEditor(options: UseDisertareEditorOptions) {
   onMounted(() => {
@@ -92,7 +93,13 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
           Katex,
           Prism,
           Mermaid,
+
+          // Imágenes estándar
           Image,
+
+          // Imágenes avanzadas (F2.15)
+          ImagesAdvExtension,
+
           Table.configure({
             resizable: true,
             HTMLAttributes: {
@@ -130,8 +137,7 @@ export function useDisertareEditor(options: UseDisertareEditorOptions) {
 
           // F2.3: citas inline
           CitationInline.configure({
-            getReferenceById: (id: string) =>
-            options.citationManager.getReference(id),
+            getReferenceById: (id: string) => options.citationManager.getReference(id),
                                    getCurrentStyle: () => options.getCitationStyle(),
                                    formatter: safeCitationFormatter,
           }),
