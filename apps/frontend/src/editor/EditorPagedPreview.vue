@@ -14,12 +14,25 @@
           <div v-html="page.header" />
         </header>
 
-        <!-- 🔥 Cuerpo con layout dinámico -->
+        <!-- Cuerpo con layout dinámico + overlays de contenedores -->
         <div
           class="page-preview-inner"
           :class="columnClass(page.layoutColumns)"
         >
           <div v-html="page.html" />
+
+          <!-- Overlays F2.19.R3 -->
+          <div
+            v-if="page.validContainers.length"
+            class="page-preview-overlays"
+          >
+            <div
+              v-for="(region, idx) in page.validContainers"
+              :key="region.id ?? idx"
+              class="page-preview-overlay"
+              :style="rectStyle(region)"
+            />
+          </div>
         </div>
 
         <footer class="page-preview-footer">
@@ -46,6 +59,7 @@ import {
   resolveHeaderFooterForSection,
   resolveLayoutForSection,
 } from './composables/usePageSections'
+import type { TextContainerRegion } from './composables/usePageSections'
 
 const props = defineProps<{
   pages: Page[]
@@ -56,11 +70,56 @@ const { section } = usePageSections()
 type PageWithLayout = Page & {
   header: string
   footer: string
+  /** Contenedores rectangulares ya filtrados y normalizados */
+  validContainers: TextContainerRegion[]
 }
 
+/* Columnas F2.19 */
 function columnClass(columns: number | undefined): string {
   if (!columns || columns <= 1) return 'cols-1'
   return `cols-${columns}`
+}
+
+/* Helpers zonas F2.19.R3 */
+
+function isValidRectRegion(region: unknown): region is TextContainerRegion {
+  if (!region || typeof region !== 'object') return false
+  const r = region as TextContainerRegion
+  const shape = r.shape
+  if (!shape || shape.kind !== 'rect') return false
+  if (!Array.isArray(shape.points) || shape.points.length < 2) return false
+  return true
+}
+
+/**
+ * Convierte un TextContainerRegion (rect) en estilos CSS absolutos.
+ * Asumimos puntos normalizados 0–1.
+ */
+function rectStyle(region: TextContainerRegion): Record<string, string> {
+  const shape = region.shape
+  if (!shape || shape.kind !== 'rect' || !Array.isArray(shape.points) || shape.points.length < 2) {
+    return {}
+  }
+
+  const [p1, p2] = shape.points
+  const x1 = typeof p1.x === 'number' ? p1.x : 0
+  const y1 = typeof p1.y === 'number' ? p1.y : 0
+  const x2 = typeof p2.x === 'number' ? p2.x : 1
+  const y2 = typeof p2.y === 'number' ? p2.y : 1
+
+  const x = Math.min(x1, x2)
+  const y = Math.min(y1, y2)
+  const w = Math.max(0.01, Math.abs(x2 - x1))
+  const h = Math.max(0.01, Math.abs(y2 - y1))
+
+  const clamp = (v: number) => Math.max(0, Math.min(v, 1))
+
+  return {
+    left: `${clamp(x) * 100}%`,
+    top: `${clamp(y) * 100}%`,
+    width: `${clamp(w) * 100}%`,
+    height: `${clamp(h) * 100}%`,
+  }
 }
 
 const pagesWithLayout = computed<PageWithLayout[]>(() => {
@@ -68,6 +127,10 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
   if (!total) return []
 
   const layout = resolveLayoutForSection(section)
+  const allContainers = Array.isArray(layout.containers) ? layout.containers : []
+
+  // Filtramos una vez a sólo rectángulos válidos
+  const validContainers = allContainers.filter(isValidRectRegion)
 
   return props.pages.map((p, index) => {
     const pageNumber = index + 1
@@ -90,13 +153,13 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
       header,
       footer,
       layoutColumns: p.layoutColumns ?? layout.columns,
+      validContainers,
     }
   })
 })
 </script>
 
 <style scoped>
-/* Panel editor */
 .editor-pane {
   max-width: var(--disertare-page-width, 794px);
   margin: 0 auto;
@@ -140,12 +203,13 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
 
 /* Cuerpo */
 .page-preview-inner {
+  position: relative; /* para overlays absolutos */
   flex: 1;
   padding: var(--disertare-page-padding, 32px 40px);
   overflow: hidden;
 }
 
-/* 🔥 Columnas F2.19 */
+/* Columnas F2.19 (simple) */
 .page-preview-inner.cols-1 {
   column-count: 1;
 }
@@ -163,6 +227,21 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
 .page-preview-inner.cols-4 {
   column-count: 4;
   column-gap: 20px;
+}
+
+/* Overlays de contenedores */
+.page-preview-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-preview-overlay {
+  position: absolute;
+  border-radius: 4px;
+  border: 2px solid rgba(99, 102, 241, 0.95);
+  background-color: rgba(129, 140, 248, 0.18);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
 }
 
 /* Pie */

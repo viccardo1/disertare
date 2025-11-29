@@ -1,11 +1,16 @@
 // apps/frontend/src/editor/composables/usePagedPreview.ts
 import { ref } from 'vue'
 import { resolveLayoutForSection } from './usePageSections'
-import type { PageSectionConfig } from './usePageSections'
+import type {
+  PageSectionConfig,
+  TextContainerRegion,
+} from './usePageSections'
 
 /**
  * Página resultante del algoritmo de paginación F2.2/F2.3.R.
- * (F2.19 añade metadata de layoutColumns)
+ * F2.19 añade metadata de layout:
+ *  - layoutColumns: nº de columnas efectivas
+ *  - layoutContainers: zonas de texto (overlays MVP)
  */
 export type Page = {
   index: number
@@ -13,6 +18,9 @@ export type Page = {
 
   /** F2.19: columnas efectivas para la página */
   layoutColumns?: number
+
+  /** F2.19.R3: contenedores de texto asociados a la sección */
+  layoutContainers?: TextContainerRegion[]
 }
 
 // Altura “útil” de página (contenido sin footer), igual que en F2.2
@@ -87,7 +95,7 @@ function splitHtmlIntoBlocks(html: string): string[] {
         if (el.matches('pre')) {
           const chunks = splitLongPreElement(el)
           blocks.push(...chunks)
-        } else if (blockSelectors.some(sel => el.matches(sel))) {
+        } else if (blockSelectors.some((sel) => el.matches(sel))) {
           blocks.push(el.outerHTML)
         } else {
           blocks.push(el.outerHTML)
@@ -152,7 +160,7 @@ function paginateHtml(html: string, host: HTMLElement, maxHeight: number): Page[
 }
 
 /**
- * Composable F2.2/F2.3.R + F2.19 (columnas).
+ * Composable F2.2/F2.3.R + F2.19 (columnas + contenedores).
  */
 export function usePagedPreview(options: {
   getHtml: () => string
@@ -186,16 +194,18 @@ export function usePagedPreview(options: {
 
     const maxHeight = options.pageHeightPx ?? DEFAULT_PAGE_HEIGHT_PX
 
-    // Paginación 1:1 base
+    // Paginación base
     const rawPages = paginateHtml(trimmed, host, maxHeight)
 
-    // 🔥 F2.19: aplicar layout (columnas/containers) a cada página
+    // 🔥 F2.19: aplicar layout (columnas + contenedores) de la sección actual
     const layout = resolveLayoutForSection(options.currentSection)
 
-    pages.value = rawPages.map(p => ({
+    const containers: TextContainerRegion[] = layout.containers ?? []
+
+    pages.value = rawPages.map((p) => ({
       ...p,
-      layoutColumns: layout.columns, // sólo columnas por ahora (MVP)
-    // containers: layout.containers  <-- se podrá añadir en F2.19-B
+      layoutColumns: layout.columns,
+      layoutContainers: containers,
     }))
   }
 

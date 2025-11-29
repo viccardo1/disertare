@@ -21,20 +21,26 @@
       @toggle-analytics-panel="toggleAnalyticsPanel"
       @toggle-containers-panel="toggleContainersPanel"
       @new-screenshot="handleNewScreenshot"
-    ></EditorToolbarSecondary>
+    />
 
     <!-- Barra superior de estadísticas rápidas -->
     <EditorInfoBar :stats="stats" />
 
     <div class="disertare-editor-main">
-      <div class="disertare-editor-content">
-        <!-- Vista paginada -->
+      <!-- Zona central: editor / vista paginada.
+           Aquí aplicamos el estilo de columnas SOLO cuando NO está
+           activa la vista paginada. -->
+      <div
+        class="disertare-editor-content"
+        :style="layoutColumnsStyle"
+      >
+        <!-- Vista paginada (sin columnas aún, F2.19.R3) -->
         <EditorPagedPreview
           v-if="isPagedPreview"
           :pages="pages"
         />
 
-        <!-- Editor TipTap -->
+        <!-- Editor TipTap en flujo continuo -->
         <EditorContent
           v-else
           :editor="editor"
@@ -53,9 +59,6 @@
         :on-new-screenshot="handleNewScreenshot"
         :on-send-screenshot-to-slide="handleSendScreenshotToSlide"
         @close="closeSidebar"
-        @references-changed="onReferencesChanged"
-        @update:current-citationStyle="changeCitationStyle"
-        @insert-citation-from-panel="insertCitationFromPanel"
       />
     </div>
 
@@ -87,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import type { Editor } from '@tiptap/core'
 import { EditorContent } from '@tiptap/vue-3'
 import type { CitationStyleId } from '@disertare/editor-citations'
@@ -167,7 +170,7 @@ function togglePanel(panel: ActivePanel) {
   activePanel.value = activePanel.value === panel ? 'none' : panel
 }
 
-/* Toggles */
+/* Toggles de paneles */
 const toggleReferencesPanel = () => togglePanel('references')
 const toggleOcrPanel = () => togglePanel('ocr')
 const togglePageSectionsPanel = () => togglePanel('pageSections')
@@ -202,10 +205,10 @@ function handleNewScreenshot() {
 }
 
 function handleSendScreenshotToSlide() {
-  // Hook disponible para F2.13/F3.x
+  // Hook reservado para F2.13/F3.x
 }
 
-/* Shortcut global */
+/* Atajo global para captura */
 function onGlobalKeydown(e: KeyboardEvent) {
   const isCtrlOrCmd = e.ctrlKey || e.metaKey
   if (isCtrlOrCmd && e.shiftKey && e.code === 'KeyS') {
@@ -217,7 +220,7 @@ function onGlobalKeydown(e: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
 onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
-/* Citas */
+/* Citas – integración toolbar / panel */
 function insertCitationFromToolbar() {
   const refs = citationManager.listReferences()
   if (!refs.length) {
@@ -237,7 +240,12 @@ function insertCitationFromPanel(payload: {
   prefix?: string
   suffix?: string
 }) {
-  insertCitationFor(payload.refId, payload.locator, payload.prefix, payload.suffix)
+  insertCitationFor(
+    payload.refId,
+    payload.locator,
+    payload.prefix,
+    payload.suffix,
+  )
 }
 
 function onReferencesChanged() {
@@ -248,16 +256,71 @@ function changeCitationStyle(style: CitationStyleId) {
   currentCitationStyle.value = style
 }
 
-/* Inicializar editor */
+/**
+ * F2.19.R2 — estilo de columnas para la vista de edición continua.
+ *
+ * Lee el atributo `layout.columns` del nodo `pageSection` activo:
+ *   { count: number, gutter: number }
+ *
+ * y lo traduce a `column-count` / `column-gap` sobre el contenedor
+ * `.disertare-editor-content`.
+ *
+ * NOTA: si está activa la vista paginada, no aplicamos columnas
+ * aquí para no interferir con el paginador (eso será F2.19.R3).
+ */
+const layoutColumnsStyle = computed<Record<string, string>>(() => {
+  // Si el usuario está en vista paginada, no aplicamos columnas aquí.
+  if (isPagedPreview.value) {
+    return {}
+  }
+
+  const inst = editor.value
+  if (!inst) return {}
+
+  try {
+    const attrs = inst.getAttributes('pageSection') as {
+      layout?: {
+        columns?: {
+          count?: number
+          gutter?: number | null
+        } | null
+      }
+    }
+
+    const columns = attrs?.layout?.columns
+    const count = columns?.count ?? 0
+
+    if (!Number.isFinite(count) || count < 2) {
+      // 1 columna o valor inválido → editor normal, sin columnas
+      return {}
+    }
+
+    const gap = columns?.gutter ?? 24
+
+    return {
+      columnCount: String(count),
+      columnGap: `${gap}px`,
+    }
+  } catch {
+    // Si por cualquier razón getAttributes falla, no rompemos el editor.
+    return {}
+  }
+})
+
+/* Inicializar editor TipTap + extensiones Disertare */
 useDisertareEditor({
   editor,
   citationManager,
   getCitationStyle: () => currentCitationStyle.value ?? 'apa',
   onUpdate: () => {
     updateStats()
-    if (isPagedPreview.value) recomputePages()
+    if (isPagedPreview.value) {
+      recomputePages()
+    }
   },
-  onSelectionUpdate: () => {},
+  onSelectionUpdate: () => {
+    // En F2.x no necesitamos lógica adicional aquí
+  },
 })
 </script>
 
@@ -278,5 +341,10 @@ useDisertareEditor({
   flex: 1;
   padding: 0.75rem;
   overflow: auto;
+
+  /* Fallback suave para columnas:
+     - Dejamos que el navegador rompa líneas de forma razonable.
+     - Mantiene buen comportamiento aunque se activen las columnas. */
+  word-wrap: break-word;
 }
 </style>
