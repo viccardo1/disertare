@@ -21,9 +21,9 @@
     <button
       type="button"
       class="toolbar-toggle"
-      @click="emit('toggle-toc-panel')"
+      @click="emit('toggle-ocr-panel')"
     >
-      TOC / Índice
+      OCR
     </button>
 
     <button
@@ -34,7 +34,7 @@
       Encabezados / pies
     </button>
 
-    <!-- Datos / Estadística -->
+    <!-- Datos / Estadística (F2.6) -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -43,7 +43,16 @@
       Datos / Estadística
     </button>
 
-    <!-- Diagramas (Mermaid, diagramas avanzados, etc.) -->
+    <!-- F2.17: Análisis estadístico avanzado -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-stats-adv-panel')"
+    >
+      Análisis avanzado
+    </button>
+
+    <!-- Diagramas avanzados (F2.11) -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -52,16 +61,7 @@
       Diagramas
     </button>
 
-    <!-- Panel lateral SVG (F2.16) -->
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('toggle-svg-panel')"
-    >
-      SVG
-    </button>
-
-    <!-- F2.12: Canvas de Presentaciones -->
+    <!-- Canvas de Presentaciones (F2.12) -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -70,15 +70,16 @@
       Presentaciones
     </button>
 
-    <!-- F2.7–F2.10 paneles específicos -->
+    <!-- Bio (secuencias) -->
     <button
       type="button"
       class="toolbar-toggle"
       @click="emit('toggle-bio-panel')"
     >
-      Bio (secuencias)
+      Bio
     </button>
 
+    <!-- Circuitos -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -87,6 +88,7 @@
       Circuitos
     </button>
 
+    <!-- Neumática / Hidráulica -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -95,16 +97,7 @@
       Neumática / Hidráulica
     </button>
 
-    <!-- OCR -->
-    <button
-      type="button"
-      class="toolbar-toggle"
-      @click="emit('toggle-ocr-panel')"
-    >
-      OCR
-    </button>
-
-    <!-- F2.13: Capturas de pantalla (abre panel) -->
+    <!-- Capturas de pantalla (panel) -->
     <button
       type="button"
       class="toolbar-toggle"
@@ -130,6 +123,15 @@
     >
       Partes académicas
     </button>
+
+    <!-- Panel lateral SVG (F2.16) -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-svg-panel')"
+    >
+      SVG
+    </button>
   </div>
 </template>
 
@@ -140,35 +142,32 @@ const emit = defineEmits<{
   (e: 'toggle-ocr-panel'): void
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
+  (e: 'toggle-stats-adv-panel'): void
   (e: 'toggle-diagrams-panel'): void
-  (e: 'toggle-svg-panel'): void
   (e: 'toggle-slides-panel'): void
   (e: 'toggle-bio-panel'): void
   (e: 'toggle-circuits-panel'): void
   (e: 'toggle-pneumatics-panel'): void
   (e: 'toggle-screenshot-panel'): void
-  (e: 'toggle-parts-panel'): void
-  (e: 'toggle-toc-panel'): void
   (e: 'new-screenshot'): void
+  (e: 'toggle-parts-panel'): void
+  (e: 'toggle-svg-panel'): void
 }>()
-
-// placeholder i18n para evitar el warning si se usa t() en el futuro
-const t = (key: string) => key
 </script>
 
 <style scoped>
 .editor-toolbar-secondary {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   padding: 4px 8px;
   border-bottom: 1px solid #e5e7eb;
-  background: #fdfbff;
+  background: #f9fafb;
 }
 
 .toolbar-toggle {
+  padding: 4px 8px;
   border-radius: 999px;
-  padding: 4px 10px;
   border: 1px solid #e5e7eb;
   background: #f9f5ff;
   font-size: 12px;

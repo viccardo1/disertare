@@ -14,22 +14,19 @@
         type="button"
         class="editor-sidebar__close"
         @click="emit('close')"
-        aria-label="Cerrar panel de herramientas"
       >
         ✕
       </button>
     </header>
 
     <section class="editor-sidebar__body">
-      <!-- Referencias / Gestor de citas -->
+      <!-- Gestor de citas -->
       <EditorReferencesPanel
         v-if="activePanel === 'references'"
+        :editor="editor"
         :citation-manager="citationManager"
-        :current-citation-style="currentCitationStyle ?? 'apa'"
+        :current-citation-style="currentCitationStyle"
         :citation-styles="citationStyles"
-        @references-changed="emit('references-changed')"
-        @update:current-citationStyle="onUpdateCitationStyle"
-        @insert-citation-from-panel="(payload) => emit('insert-citation-from-panel', payload)"
       />
 
       <!-- OCR -->
@@ -38,25 +35,25 @@
         :editor="editor"
       />
 
-      <!-- Encabezados / Pies -->
+      <!-- Encabezados / pies de página -->
       <EditorPageSectionsPanel
         v-else-if="activePanel === 'pageSections'"
         :editor="editor"
       />
 
-      <!-- Datos / Estadística -->
+      <!-- Datos / Estadística (F2.6) -->
       <EditorStatsPanel
         v-else-if="activePanel === 'stats'"
         :editor="editor"
       />
 
-      <!-- Diagramas avanzados -->
+      <!-- Diagramas avanzados (F2.11) -->
       <EditorDiagramsPanel
         v-else-if="activePanel === 'diagramsAdv'"
         :editor="editor"
       />
 
-      <!-- Presentaciones / Canvas de diapositivas -->
+      <!-- Canvas de presentaciones (F2.12) -->
       <EditorSlidesPanel
         v-else-if="activePanel === 'slides'"
         :editor="editor"
@@ -101,11 +98,17 @@
         :editor="editor"
       />
 
-      <EditorSvgPanel
-      v-if="activePanel === 'svg'"
-      :editor="editor"
+      <!-- F2.17: Análisis estadístico avanzado -->
+      <EditorStatsAdvPanel
+        v-else-if="activePanel === 'stats-adv'"
+        :editor="editor"
       />
 
+      <!-- F2.16: Panel SVG avanzado -->
+      <EditorSvgPanel
+        v-else-if="activePanel === 'svg'"
+        :editor="editor"
+      />
     </section>
   </aside>
 </template>
@@ -128,6 +131,7 @@ import EditorScreenshotPanel from './EditorScreenshotPanel.vue'
 import EditorPartsPanel from './EditorPartsPanel.vue'
 import EditorTocPanel from './EditorTocPanel.vue'
 import EditorSvgPanel from './EditorSvgPanel.vue'
+import EditorStatsAdvPanel from './EditorStatsAdvPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -135,6 +139,7 @@ type ActivePanel =
   | 'ocr'
   | 'pageSections'
   | 'stats'
+  | 'stats-adv'
   | 'diagramsAdv'
   | 'slides'
   | 'bio'
@@ -143,6 +148,7 @@ type ActivePanel =
   | 'screenshot'
   | 'parts'
   | 'toc'
+  | 'svg'
 
 const props = defineProps<{
   activePanel: ActivePanel
@@ -161,19 +167,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'references-changed'): void
-  (e: 'update:current-citationStyle', value: CitationStyleId): void
-  (e: 'insert-citation-from-panel', payload: {
-    refId: string
-    locator?: string
-    prefix?: string
-    suffix?: string
-  }): void
 }>()
-
-function onUpdateCitationStyle(style: CitationStyleId) {
-  emit('update:current-citationStyle', style)
-}
 
 function handleNewScreenshotFromPanel() {
   if (props.onNewScreenshot) {
@@ -192,6 +186,7 @@ const titles: Record<Exclude<ActivePanel, 'none'>, string> = {
   ocr: 'OCR',
   pageSections: 'Encabezados / pies',
   stats: 'Datos / Estadística',
+  'stats-adv': 'Análisis avanzado',
   diagramsAdv: 'Diagramas avanzados',
   slides: 'Canvas de presentaciones',
   bio: 'Bio (secuencias)',
@@ -200,6 +195,7 @@ const titles: Record<Exclude<ActivePanel, 'none'>, string> = {
   screenshot: 'Capturas de pantalla',
   parts: 'Partes académicas',
   toc: 'TOC / Índice',
+  svg: 'SVG avanzado',
 }
 
 const currentTitle = computed(() => {
@@ -210,29 +206,26 @@ const currentTitle = computed(() => {
 
 <style scoped>
 .editor-sidebar {
-  width: 320px;
-  max-width: 40%;
+  width: 340px;
+  max-width: 100%;
   border-left: 1px solid #e5e7eb;
-  background: #ffffff;
+  background: #f9fafb;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 
 .editor-sidebar__header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
 }
 
 .editor-sidebar__title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  margin: 0;
-  color: #4b3f72;
+  color: #111827;
 }
 
 .editor-sidebar__close {

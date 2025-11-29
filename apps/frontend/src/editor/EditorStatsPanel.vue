@@ -224,6 +224,12 @@ Ejemplo JSON:
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Editor } from '@tiptap/core'
+import {
+  registerDataset,
+  type StatsDataset,
+  type StatsFieldDef,
+  type StatsColumnKind,
+} from '@disertare/editor-ext-stats-adv'
 
 interface Dataset {
   id: string
@@ -287,7 +293,8 @@ function parseCsv(text: string): Dataset['rows'] {
     headers.forEach((header, idx) => {
       const rawValue = (values[idx] ?? '').trim()
       const numeric = Number(rawValue)
-      row[header] = Number.isFinite(numeric) && rawValue !== '' ? numeric : rawValue
+      row[header] =
+        Number.isFinite(numeric) && rawValue !== '' ? numeric : rawValue
     })
     return row
   })
@@ -306,8 +313,85 @@ function parseJson(text: string): Dataset['rows'] {
 function normaliseDatasetName(name: string, rows: Dataset['rows']): string {
   const base = name.trim() || 'Dataset sin nombre'
   const _rowInfo = rows.length === 1 ? '1 fila' : `${rows.length} filas`
-  // Podríamos incluir rowInfo en el futuro si se desea
+  // Por ahora no mostramos rowInfo, pero lo podríamos usar en el futuro.
   return `${base}`
+}
+
+/**
+ * F2.17 — inferencia muy simple del tipo de columna para registrar en stats-adv.
+ */
+function inferKindForField(
+  field: string,
+  sampleValues: unknown[],
+): StatsColumnKind {
+  const lower = field.toLowerCase()
+
+  if (/(fecha|date|time|timestamp)/.test(lower)) return 'datetime'
+
+  let numericCount = 0
+  let stringCount = 0
+
+  for (const v of sampleValues.slice(0, 20)) {
+    if (typeof v === 'number') {
+      numericCount += 1
+    } else if (typeof v === 'string') {
+      stringCount += 1
+    }
+  }
+
+  if (numericCount > 0 && stringCount === 0) {
+    return 'numeric'
+  }
+
+  return 'categorical'
+}
+
+/**
+ * ¿Esta columna es numérica (todos los valores son number o null/undefined)?
+ * Se usa para decidir si un "histograma" es realmente binning numérico
+ * o si degradamos a barras de conteo por categoría.
+ */
+function isNumericFieldForDataset(dataset: Dataset, field: string): boolean {
+  let hasNumeric = false
+  for (const row of dataset.rows) {
+    const value = row[field]
+    if (value == null) continue
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      hasNumeric = true
+      continue
+    }
+    // Encontramos algo que NO es número → no tratamos como numérico
+    return false
+  }
+  return hasNumeric
+}
+
+/**
+ * Registra el dataset F2.6 en el motor F2.17 (`@disertare/editor-ext-stats-adv`)
+ * para que el panel de Análisis avanzado pueda reutilizarlo.
+ */
+function registerDatasetForAdvancedStats(dataset: Dataset): void {
+  const rows = dataset.rows
+  const columns = dataset.columns
+
+  const fields: StatsFieldDef[] = columns.map(col => {
+    const sampleValues = rows.map(row => row[col])
+    return {
+      key: col,
+      label: col,
+      kind: inferKindForField(col, sampleValues),
+    }
+  })
+
+  const advDataset: StatsDataset = {
+    id: dataset.id,
+    label: dataset.name,
+    description: dataset.displayName,
+    rows,
+    fields,
+  }
+
+  registerDataset(advDataset)
 }
 
 function handleCreateDataset(): void {
@@ -342,13 +426,18 @@ function handleCreateDataset(): void {
       columns,
     }
 
+    // 1) Registrar en la UI básica (F2.6)
     datasets.value.push(dataset)
     selectedDatasetId.value = dataset.id
     fieldX.value = columns[0] ?? ''
     fieldY.value = columns[1] ?? ''
 
+    // 2) Registrar en el motor avanzado (F2.17)
+    registerDatasetForAdvancedStats(dataset)
+
     errorMessage.value = ''
   } catch (err: unknown) {
+    // eslint-disable-next-line no-console
     console.error('Error al crear dataset:', err)
     errorMessage.value =
       err instanceof Error
@@ -357,6 +446,13 @@ function handleCreateDataset(): void {
   }
 }
 
+/**
+ * Construye el spec Vega-Lite básico F2.6, con defensas:
+ * - "line" y "bar" siguen igual.
+ * - "histogram":
+ *    - si X es numérico → binning real (histograma clásico);
+ *    - si X NO es numérico → barras de conteo por categoría.
+ */
 function buildVegaLiteSpec() {
   const dataset = selectedDataset.value
   if (!dataset) return null
@@ -378,10 +474,23 @@ function buildVegaLiteSpec() {
   if (chartType.value === 'line') {
     base.mark = 'line'
   } else if (chartType.value === 'histogram') {
-    base.mark = 'bar'
-    base.encoding = {
-      x: { field: xField, type: 'quantitative', bin: true },
-      y: { aggregate: 'count', type: 'quantitative' },
+    const isNumeric = isNumericFieldForDataset(dataset, xField)
+
+    if (isNumeric) {
+      // Histograma numérico clásico
+      base.mark = 'bar'
+      base.encoding = {
+        x: { field: xField, type: 'quantitative', bin: true },
+        y: { aggregate: 'count', type: 'quantitative' },
+      }
+    } else {
+      // Degradamos a barras por categoría:
+      // Conteo de registros por valor distinto de X.
+      base.mark = 'bar'
+      base.encoding = {
+        x: { field: xField, type: 'nominal' },
+        y: { aggregate: 'count', type: 'quantitative' },
+      }
     }
   } else {
     base.mark = 'bar'
@@ -390,6 +499,10 @@ function buildVegaLiteSpec() {
   return base
 }
 
+/**
+ * F2.6 → usa el comando insertStatsChart del nodo statsChart (editor-ext-stats).
+ * Ahora le pasamos también datasetId para que F2.17 pueda trazar el origen.
+ */
 function handleInsertChart(): void {
   const editor = props.editor
   if (!editor) return
@@ -397,16 +510,18 @@ function handleInsertChart(): void {
   const spec = buildVegaLiteSpec()
   if (!spec) return
 
-  editor
-    .chain()
-    .focus()
-    .insertContent({
-      type: 'statsChart', // nodo de @disertare/editor-ext-stats
-      attrs: {
-        spec,
-      },
-    })
-    .run()
+  const dataset = selectedDataset.value
+  const title =
+    chartTitle.value.trim() || dataset?.name || 'Gráfico sin título'
+
+  // @ts-expect-error – comando extendido por la extensión statsChart
+  editor.commands.insertStatsChart({
+    title,
+    spec,
+    datasetId: dataset ? dataset.id : null,
+    recipe: null,
+    fields: null,
+  })
 }
 </script>
 
@@ -417,76 +532,72 @@ function handleInsertChart(): void {
   flex-direction: column;
 }
 
-/* Encabezado */
 .stats-panel__header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 4px;
+  padding: 0.75rem 0.75rem 0.5rem;
 }
 
 .stats-panel__title {
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #1e1b4b;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .stats-panel__phase {
+  font-size: 11px;
   font-weight: 500;
-  font-size: 12px;
-  margin-left: 4px;
-  color: #6b21a8;
+  color: #4b5563;
+  background: #eef2ff;
+  padding: 2px 6px;
+  border-radius: 999px;
 }
 
 .stats-panel__subtitle {
+  margin: 4px 0 0;
   font-size: 12px;
   color: #4b5563;
 }
 
-/* Secciones */
 .stats-panel__section {
-  padding-top: 8px;
-  border-top: 1px solid #f3e8ff;
-  margin-top: 8px;
-}
-
-.stats-panel__section:first-of-type {
-  margin-top: 4px;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .stats-panel__section-title {
-  font-size: 13px;
+  margin: 0 0 4px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 6px;
-  color: #4338ca;
+  color: #111827;
 }
 
 .stats-panel__hint {
-  margin-bottom: 8px;
+  margin: 0 0 6px;
   font-size: 11px;
   color: #6b7280;
 }
 
-/* Campos */
 .stats-panel__label {
   display: block;
-  margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #374151;
+  margin-bottom: 4px;
 }
 
 .stats-panel__textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 9px;
+  padding: 6px 9px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    'Liberation Mono', 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 11px;
   resize: vertical;
-  background: #f9fafb;
+  min-height: 120px;
   margin-bottom: 8px;
 }
 

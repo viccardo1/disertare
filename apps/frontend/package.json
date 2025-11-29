@@ -32,6 +32,7 @@
     "@disertare/editor-ext-prism": "workspace:^",
     "@disertare/editor-ext-slides": "workspace:^",
     "@disertare/editor-ext-stats": "workspace:^",
+    "@disertare/editor-ext-stats-adv": "workspace:*",
     "@disertare/editor-ext-tables": "workspace:^",
     "@tiptap/starter-kit": "3.10.2",
     "@tiptap/vue-3": "3.10.2",

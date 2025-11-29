@@ -1,0 +1,12 @@
+{
+  "name": "@disertare/editor-ext-stats-adv",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "license": "MIT",
+  "sideEffects": false,
+  "dependencies": {},
+  "peerDependencies": {}
+}

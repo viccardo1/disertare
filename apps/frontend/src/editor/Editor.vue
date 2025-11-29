@@ -8,6 +8,7 @@
       @toggle-ocr-panel="toggleOcrPanel"
       @toggle-page-sections-panel="togglePageSectionsPanel"
       @toggle-stats-panel="toggleStatsPanel"
+      @toggle-stats-adv-panel="toggleStatsAdvPanel"
       @toggle-diagrams-panel="toggleDiagramsPanel"
       @toggle-slides-panel="toggleSlidesPanel"
       @toggle-bio-panel="toggleBioPanel"
@@ -144,6 +145,7 @@ type ActivePanel =
   | 'ocr'
   | 'pageSections'
   | 'stats'
+  | 'stats-adv'
   | 'diagramsAdv'
   | 'slides'
   | 'bio'
@@ -166,6 +168,7 @@ const toggleReferencesPanel = () => togglePanel('references')
 const toggleOcrPanel = () => togglePanel('ocr')
 const togglePageSectionsPanel = () => togglePanel('pageSections')
 const toggleStatsPanel = () => togglePanel('stats')
+const toggleStatsAdvPanel = () => togglePanel('stats-adv')
 const toggleDiagramsPanel = () => togglePanel('diagramsAdv')
 const toggleSlidesPanel = () => togglePanel('slides')
 const toggleBioPanel = () => togglePanel('bio')
