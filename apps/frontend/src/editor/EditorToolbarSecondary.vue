@@ -52,6 +52,15 @@
       Análisis avanzado
     </button>
 
+    <!-- F2.18: Bitácora analítica -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-analytics-panel')"
+    >
+      Bitácora analítica
+    </button>
+
     <!-- Diagramas avanzados (F2.11) -->
     <button
       type="button"
@@ -132,6 +141,15 @@
     >
       SVG
     </button>
+
+    <!-- F2.19: Zonas de texto -->
+    <button
+      type="button"
+      class="toolbar-toggle"
+      @click="emit('toggle-containers-panel')"
+    >
+      Zonas de texto
+    </button>
   </div>
 </template>
 
@@ -143,6 +161,7 @@ const emit = defineEmits<{
   (e: 'toggle-page-sections-panel'): void
   (e: 'toggle-stats-panel'): void
   (e: 'toggle-stats-adv-panel'): void
+  (e: 'toggle-analytics-panel'): void
   (e: 'toggle-diagrams-panel'): void
   (e: 'toggle-slides-panel'): void
   (e: 'toggle-bio-panel'): void
@@ -152,6 +171,7 @@ const emit = defineEmits<{
   (e: 'new-screenshot'): void
   (e: 'toggle-parts-panel'): void
   (e: 'toggle-svg-panel'): void
+  (e: 'toggle-containers-panel'): void
 }>()
 </script>
 

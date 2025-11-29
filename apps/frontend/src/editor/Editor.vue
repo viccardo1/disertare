@@ -18,15 +18,17 @@
       @toggle-parts-panel="togglePartsPanel"
       @toggle-toc-panel="toggleTocPanel"
       @toggle-svg-panel="toggleSvgPanel"
+      @toggle-analytics-panel="toggleAnalyticsPanel"
+      @toggle-containers-panel="toggleContainersPanel"
       @new-screenshot="handleNewScreenshot"
-    />
+    ></EditorToolbarSecondary>
 
     <!-- Barra superior de estadísticas rápidas -->
     <EditorInfoBar :stats="stats" />
 
     <div class="disertare-editor-main">
       <div class="disertare-editor-content">
-        <!-- Vista paginada F2.x -->
+        <!-- Vista paginada -->
         <EditorPagedPreview
           v-if="isPagedPreview"
           :pages="pages"
@@ -101,11 +103,11 @@ import { useEditorCommands } from './composables/useEditorCommands'
 import { useEditorStats } from './composables/useEditorStats'
 import { usePagedPreview } from './composables/usePagedPreview'
 import { useEditorCitations } from './composables/useEditorCitations'
-import { useEditorScreenshot } from './composables/useEditorScreenshot' // F2.13
+import { useEditorScreenshot } from './composables/useEditorScreenshot'
 
 const editor = ref<Editor | null>(null)
 
-/* Citas / Bibliografía */
+/* Citas */
 const {
   citationManager,
   currentCitationStyle,
@@ -131,7 +133,7 @@ const {
 /* Toolbar primaria */
 const commands = useEditorCommands(editor)
 
-/* Captura de pantalla (F2.13) */
+/* Screenshot */
 const {
   captureAndInsertScreenshot,
   isCapturing,
@@ -155,15 +157,17 @@ type ActivePanel =
   | 'parts'
   | 'toc'
   | 'svg'
+  | 'analytics'
+  | 'containers'
 
 const activePanel = ref<ActivePanel>('none')
 
-/* Helper genérico para toggles de panel */
+/* Helper de toggles */
 function togglePanel(panel: ActivePanel) {
   activePanel.value = activePanel.value === panel ? 'none' : panel
 }
 
-/* Toggles toolbar secundaria */
+/* Toggles */
 const toggleReferencesPanel = () => togglePanel('references')
 const toggleOcrPanel = () => togglePanel('ocr')
 const togglePageSectionsPanel = () => togglePanel('pageSections')
@@ -178,6 +182,8 @@ const toggleScreenshotPanel = () => togglePanel('screenshot')
 const togglePartsPanel = () => togglePanel('parts')
 const toggleTocPanel = () => togglePanel('toc')
 const toggleSvgPanel = () => togglePanel('svg')
+const toggleAnalyticsPanel = () => togglePanel('analytics')
+const toggleContainersPanel = () => togglePanel('containers')
 
 function togglePagedPreview() {
   isPagedPreview.value = !isPagedPreview.value
@@ -190,16 +196,16 @@ function closeSidebar() {
   activePanel.value = 'none'
 }
 
-/* Capturas desde toolbar secundaria / panel */
+/* Screenshot */
 function handleNewScreenshot() {
   captureAndInsertScreenshot()
 }
 
 function handleSendScreenshotToSlide() {
-  // Implementación existente de F2.13 (ya la tienes en useEditorScreenshot)
+  // Hook disponible para F2.13/F3.x
 }
 
-/* Atajo de teclado F2.13: Ctrl+Shift+S / Cmd+Shift+S */
+/* Shortcut global */
 function onGlobalKeydown(e: KeyboardEvent) {
   const isCtrlOrCmd = e.ctrlKey || e.metaKey
   if (isCtrlOrCmd && e.shiftKey && e.code === 'KeyS') {
@@ -208,15 +214,10 @@ function onGlobalKeydown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
-  window.addEventListener('keydown', onGlobalKeydown)
-})
+onMounted(() => window.addEventListener('keydown', onGlobalKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
-onUnmounted(() => {
-  window.removeEventListener('keydown', onGlobalKeydown)
-})
-
-/* Citas desde toolbar/panel */
+/* Citas */
 function insertCitationFromToolbar() {
   const refs = citationManager.listReferences()
   if (!refs.length) {
@@ -236,12 +237,7 @@ function insertCitationFromPanel(payload: {
   prefix?: string
   suffix?: string
 }) {
-  insertCitationFor(
-    payload.refId,
-    payload.locator,
-    payload.prefix,
-    payload.suffix,
-  )
+  insertCitationFor(payload.refId, payload.locator, payload.prefix, payload.suffix)
 }
 
 function onReferencesChanged() {
@@ -259,13 +255,9 @@ useDisertareEditor({
   getCitationStyle: () => currentCitationStyle.value ?? 'apa',
   onUpdate: () => {
     updateStats()
-    if (isPagedPreview.value) {
-      recomputePages()
-    }
+    if (isPagedPreview.value) recomputePages()
   },
-  onSelectionUpdate: () => {
-    // reservado para futuras características contextuales
-  },
+  onSelectionUpdate: () => {},
 })
 </script>
 

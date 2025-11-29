@@ -14,10 +14,13 @@
           <div v-html="page.header" />
         </header>
 
+        <!-- 🔥 Cuerpo con layout dinámico -->
         <div
           class="page-preview-inner"
-          v-html="page.html"
-        />
+          :class="columnClass(page.layoutColumns)"
+        >
+          <div v-html="page.html" />
+        </div>
 
         <footer class="page-preview-footer">
           <div
@@ -37,9 +40,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Page } from './composables/usePagedPreview'
+
 import {
   usePageSections,
   resolveHeaderFooterForSection,
+  resolveLayoutForSection,
 } from './composables/usePageSections'
 
 const props = defineProps<{
@@ -53,16 +58,23 @@ type PageWithLayout = Page & {
   footer: string
 }
 
-const pagesWithLayout = computed<PageWithLayout[]>(() => {
-  const totalPages = props.pages?.length ?? 0
-  if (!totalPages) return []
+function columnClass(columns: number | undefined): string {
+  if (!columns || columns <= 1) return 'cols-1'
+  return `cols-${columns}`
+}
 
-  return props.pages.map((page, index) => {
+const pagesWithLayout = computed<PageWithLayout[]>(() => {
+  const total = props.pages?.length ?? 0
+  if (!total) return []
+
+  const layout = resolveLayoutForSection(section)
+
+  return props.pages.map((p, index) => {
     const pageNumber = index + 1
 
     const { header, footer } = resolveHeaderFooterForSection(section, {
       page: pageNumber,
-      pages: totalPages,
+      pages: total,
       isFirstPageOfSection: pageNumber === 1,
       isEvenPage: pageNumber % 2 === 0,
       meta: {
@@ -74,16 +86,17 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
     })
 
     return {
-      ...page,
+      ...p,
       header,
       footer,
+      layoutColumns: p.layoutColumns ?? layout.columns,
     }
   })
 })
 </script>
 
 <style scoped>
-/* Paneles del editor (ajuste de ancho y centrado) */
+/* Panel editor */
 .editor-pane {
   max-width: var(--disertare-page-width, 794px);
   margin: 0 auto;
@@ -93,14 +106,13 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
   padding: 16px 0 24px;
 }
 
-/* Contenedor de páginas */
 .page-preview-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* “Hoja” individual */
+/* Página */
 .page-preview {
   position: relative;
   display: flex;
@@ -115,7 +127,7 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
   overflow: hidden;
 }
 
-/* Encabezado de página */
+/* Encabezado */
 .page-preview-header {
   min-height: 24px;
   padding: 6px 12px 2px;
@@ -126,14 +138,34 @@ const pagesWithLayout = computed<PageWithLayout[]>(() => {
   align-items: flex-end;
 }
 
-/* Cuerpo de la página */
+/* Cuerpo */
 .page-preview-inner {
   flex: 1;
   padding: var(--disertare-page-padding, 32px 40px);
   overflow: hidden;
 }
 
-/* Pie de página: zona de plantilla + número de página */
+/* 🔥 Columnas F2.19 */
+.page-preview-inner.cols-1 {
+  column-count: 1;
+}
+
+.page-preview-inner.cols-2 {
+  column-count: 2;
+  column-gap: 28px;
+}
+
+.page-preview-inner.cols-3 {
+  column-count: 3;
+  column-gap: 24px;
+}
+
+.page-preview-inner.cols-4 {
+  column-count: 4;
+  column-gap: 20px;
+}
+
+/* Pie */
 .page-preview-footer {
   padding: 4px 12px 6px;
   font-size: 11px;

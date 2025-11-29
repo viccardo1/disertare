@@ -39,13 +39,6 @@ export interface StatsAdvState {
 
 /**
  * F2.17 — Estadística avanzada (núcleo de UI para gráficos avanzados).
- *
- * Este composable:
- * - lee los datasets registrados en @disertare/editor-ext-stats-adv,
- * - expone el dataset activo y sus variables,
- * - interpreta recetas de gráfico (mini-lenguaje),
- * - construye un spec Vega-Lite con buildVegaLiteSpec(),
- * - lo inserta en el documento con editor.commands.insertStatsChart().
  */
 export function useEditorStatsAdv(getEditor: () => Editor | null) {
   const state = reactive<StatsAdvState>({

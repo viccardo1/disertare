@@ -1,5 +1,4 @@
 // packages/editor-ext-stats-adv/src/types.ts
-
 export type StatsPrimitive = number | string | boolean | null
 export type StatsRow = Record<string, StatsPrimitive>
 

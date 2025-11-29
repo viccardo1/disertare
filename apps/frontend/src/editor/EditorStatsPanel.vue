@@ -8,10 +8,11 @@
     <header class="stats-panel__header">
       <h2 class="stats-panel__title">
         Datos y Estadística
-        <span class="stats-panel__phase">(F2.6)</span>
+        <span class="stats-panel__phase">(F2.6 / F2.19)</span>
       </h2>
       <p class="stats-panel__subtitle">
-        Crea un dataset pequeño y genera una gráfica básica usando Vega-Lite.
+        Crea un dataset pequeño, genera una gráfica básica con Vega-Lite
+        y ajusta el layout de columnas por sección de texto.
       </p>
     </header>
 
@@ -218,6 +219,96 @@ Ejemplo JSON:
         Insertar gráfica en el documento
       </button>
     </section>
+
+    <!-- 4) Layout de columnas (F2.19) -->
+    <section class="stats-panel__section">
+      <h3 class="stats-panel__section-title">
+        4) Layout de columnas (F2.19)
+      </h3>
+      <p class="stats-panel__hint">
+        Ajusta el número de columnas para la sección de texto actual.
+        La conversión a texto continuo conserva el contenido y el orden lógico.
+      </p>
+
+      <div class="stats-panel__field-row stats-panel__layout-row">
+        <label class="stats-panel__layout-checkbox">
+          <input
+            v-model="layoutColumnsEnabled"
+            type="checkbox"
+          />
+          <span>Activar columnas en esta sección de texto</span>
+        </label>
+      </div>
+
+      <div
+        class="stats-panel__field-row"
+        :class="{ 'stats-panel__field-row--disabled': !layoutColumnsEnabled }"
+      >
+        <label
+          class="stats-panel__label"
+          for="layout-columns-count"
+        >
+          Número de columnas
+        </label>
+        <select
+          id="layout-columns-count"
+          v-model.number="layoutColumnsCount"
+          class="stats-panel__select"
+          :disabled="!layoutColumnsEnabled"
+        >
+          <option :value="2">2 columnas</option>
+          <option :value="3">3 columnas</option>
+          <option :value="4">4 columnas</option>
+        </select>
+      </div>
+
+      <div
+        class="stats-panel__field-row"
+        :class="{ 'stats-panel__field-row--disabled': !layoutColumnsEnabled }"
+      >
+        <label
+          class="stats-panel__label"
+          for="layout-columns-gutter"
+        >
+          Separación entre columnas (px)
+        </label>
+        <input
+          id="layout-columns-gutter"
+          v-model.number="layoutColumnsGutter"
+          class="stats-panel__input"
+          type="number"
+          min="0"
+          max="96"
+          step="2"
+          :disabled="!layoutColumnsEnabled"
+        />
+      </div>
+
+      <div class="stats-panel__layout-actions">
+        <button
+          type="button"
+          class="stats-panel__button stats-panel__button-primary"
+          :disabled="!props.editor"
+          @click="applyLayoutColumns"
+        >
+          Aplicar a sección actual
+        </button>
+
+        <button
+          type="button"
+          class="stats-panel__button stats-panel__button-secondary"
+          :disabled="!props.editor"
+          @click="resetToContinuousText"
+        >
+          Convertir a texto continuo
+        </button>
+      </div>
+
+      <p class="stats-panel__hint stats-panel__hint-small">
+        Las columnas se guardan como <code>layout.columns</code> en la sección.
+        Si no hay columnas activas, el texto se comporta como una sola columna.
+      </p>
+    </section>
   </aside>
 </template>
 
@@ -255,6 +346,11 @@ const chartType = ref<'bar' | 'line' | 'histogram'>('bar')
 const fieldX = ref('')
 const fieldY = ref('')
 const chartTitle = ref('')
+
+// F2.19 — layout de columnas por sección
+const layoutColumnsEnabled = ref(false)
+const layoutColumnsCount = ref(2)
+const layoutColumnsGutter = ref(24)
 
 const selectedDataset = computed<Dataset | null>(() => {
   return datasets.value.find(d => d.id === selectedDatasetId.value) ?? null
@@ -523,6 +619,73 @@ function handleInsertChart(): void {
     fields: null,
   })
 }
+
+/**
+ * F2.19 — aplica layout.columns a la sección de texto actual.
+ * Asume que el nodo de sección se llama `pageSection` y expone
+ * un atributo `layout` con subcampo `columns: { count, gutter }`.
+ */
+function applyLayoutColumns(): void {
+  const editor = props.editor
+  if (!editor) return
+
+  // Si no está activado, lo tratamos como "texto continuo"
+  if (!layoutColumnsEnabled.value) {
+    resetToContinuousText()
+    return
+  }
+
+  const count = layoutColumnsCount.value
+  const gutter = layoutColumnsGutter.value
+
+  if (!Number.isFinite(count) || count < 2) {
+    // Columna única → equivalente a texto continuo
+    resetToContinuousText()
+    return
+  }
+
+  editor
+    .chain()
+    .focus()
+    .updateAttributes('pageSection', {
+      layout: {
+        columns: {
+          count,
+          gutter,
+        },
+      },
+    })
+    .run()
+}
+
+/**
+ * F2.19 — elimina layout.columns, devolviendo la sección a texto continuo.
+ */
+function resetToContinuousText(): void {
+  const editor = props.editor
+  if (!editor) return
+
+  // Intentamos respetar otros posibles subatributos de layout.
+  const current = editor.getAttributes('pageSection') as {
+    layout?: { columns?: unknown; [key: string]: unknown }
+  }
+
+  const nextLayout: Record<string, unknown> = { ...(current.layout ?? {}) }
+  delete nextLayout.columns
+
+  const hasOtherLayoutKeys = Object.keys(nextLayout).length > 0
+
+  editor
+    .chain()
+    .focus()
+    .updateAttributes('pageSection', {
+      layout: hasOtherLayoutKeys ? nextLayout : null,
+    })
+    .run()
+
+  // Sincronizamos el estado local del panel
+  layoutColumnsEnabled.value = false
+}
 </script>
 
 <style scoped>
@@ -577,6 +740,11 @@ function handleInsertChart(): void {
   margin: 0 0 6px;
   font-size: 11px;
   color: #6b7280;
+}
+
+.stats-panel__hint-small {
+  margin-top: 4px;
+  font-size: 10px;
 }
 
 .stats-panel__label {
@@ -648,6 +816,17 @@ function handleInsertChart(): void {
   box-shadow: 0 14px 28px rgba(79, 70, 229, 0.35);
 }
 
+.stats-panel__button-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  box-shadow: none;
+}
+
+.stats-panel__button-secondary:hover {
+  background: #f9fafb;
+}
+
 .stats-panel__button-full {
   width: 100%;
   margin-top: 4px;
@@ -701,5 +880,31 @@ function handleInsertChart(): void {
 
 .stats-panel__field-row {
   margin-bottom: 6px;
+}
+
+.stats-panel__field-row--disabled {
+  opacity: 0.5;
+}
+
+/* Layout F2.19 */
+.stats-panel__layout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-panel__layout-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #374151;
+}
+
+.stats-panel__layout-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
 }
 </style>

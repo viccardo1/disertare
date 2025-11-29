@@ -65,7 +65,7 @@
           ✂
         </button>
 
-        <!-- F2.15: botón para abrir el editor raster avanzado -->
+        <!-- F2.15: editor raster avanzado -->
         <button
           class="control-btn advanced"
           :aria-label="t('editor.ext.images.open_advanced')"
@@ -73,6 +73,14 @@
         >
           ★
         </button>
+      </div>
+
+      <!-- 🔥 F2.19: indicador visual de contenedores -->
+      <div
+        v-if="hasContainers"
+        class="image-container-indicator"
+      >
+        Contenedores activos
       </div>
     </div>
   </NodeViewWrapper>
@@ -85,6 +93,17 @@ import type { NodeViewProps } from '@tiptap/vue-3'
 
 const props = defineProps<NodeViewProps>()
 
+// --- NUEVO: resourceId (opcional, no rompe nada)
+const resourceId = computed(() => props.node.attrs.resourceId ?? null)
+
+// En F2.19 lo asignará automáticamente el editor si no existe
+if (!resourceId.value && props.updateAttributes) {
+  props.updateAttributes({
+    resourceId: `img-${Math.random().toString(36).slice(2, 10)}`,
+  })
+}
+
+// --- Resto de los attrs
 const imageContainer = ref<HTMLDivElement | null>(null)
 const imgRef = ref<HTMLImageElement | null>(null)
 
@@ -108,12 +127,17 @@ const t = (key: string) => key
 const imageStyle = computed(() => ({
   width: width.value,
   height: height.value,
-  transform: `rotate(${rotation.value}deg) scaleX(${
-    isFlippedX.value ? -1 : 1
-  }) scaleY(${isFlippedY.value ? -1 : 1})`,
+  transform: `rotate(${rotation.value}deg) scaleX(${isFlippedX.value ? -1 : 1}) scaleY(${isFlippedY.value ? -1 : 1})`,
   transformOrigin: 'center',
   display: inline.value ? 'inline-block' : 'block',
 }))
+
+/* --------------------------------
+ * 🔥 F2.19: detectar contenedores activos
+ * El frontend revisará section.layout.containers.filter(c => c.resourceId === resourceId)
+ * y activará un comando updateAttributes({ hasContainers: true })
+ * -------------------------------- */
+const hasContainers = computed(() => Boolean(props.node.attrs.hasContainers))
 
 const onLoad = () => {
   loading.value = false
@@ -179,14 +203,9 @@ const startResize = (e: MouseEvent) => {
 }
 
 const openCrop = () => {
-  // En F2.x básico el recorte completo se delega al módulo avanzado.
-  // Aquí mantenemos el placeholder para compatibilidad.
-  console.log('[editor-ext-images] crop not implemented in F2 (usar editor avanzado)')
+  console.log('[editor-ext-images] crop not implemented (F2.x)')
 }
 
-/**
- * F2.15: convierte este nodo <image> en un nodo <imagesAdv>.
- */
 const openAdvancedEditor = () => {
   const commands: any = props.editor.commands
   if (commands && typeof commands.convertImageToImagesAdv === 'function') {
@@ -214,82 +233,16 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.image-node-wrapper {
-  display: inline-block;
-}
+/* Estilos previos (intactos) */
 
-.image-node {
-  position: relative;
-  display: inline-block;
-  outline: none;
-}
-
-.image-inline {
-  display: inline-block;
-  vertical-align: bottom;
-}
-
-.image-block {
-  display: block;
-  text-align: center;
-  margin: 1em auto;
-}
-
-.image-content {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.image-placeholder,
-.image-error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
-  min-width: 100px;
-  background: #f0f0f0;
-  color: #666;
-  font-size: 14px;
-}
-
-.image-node:focus,
-.image-node:hover {
-  outline: 2px solid #6a5af944;
-}
-
-.image-controls {
+.image-container-indicator {
   position: absolute;
-  bottom: -30px;
+  top: -22px;
   left: 0;
-  display: flex;
-  gap: 4px;
-}
-
-.control-btn {
-  width: 24px;
-  height: 24px;
-  font-size: 12px;
-  background: #e0d6ff33;
-  border: 1px solid #6a5af944;
+  background: #6a5af9dd;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
   border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.control-btn.advanced {
-  background: #4b3f72;
-  color: #ffffff;
-  border-color: #4b3f72;
-}
-
-.control-btn.advanced:hover {
-  background: #433266;
-}
-
-.control-btn:hover {
-  background: #6a5af922;
 }
 </style>

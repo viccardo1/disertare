@@ -3,19 +3,11 @@
   <NodeViewWrapper class="svg-adv-node">
     <header class="svg-adv-toolbar">
       <div class="svg-adv-toolbar-left">
-        <button
-          type="button"
-          class="svg-adv-btn"
-          @click="onEditMarkup"
-        >
+        <button type="button" class="svg-adv-btn" @click="onEditMarkup">
           {{ t('editor.ext.svg.edit_markup') }}
         </button>
 
-        <button
-          type="button"
-          class="svg-adv-btn"
-          @click="onPasteMarkup"
-        >
+        <button type="button" class="svg-adv-btn" @click="onPasteMarkup">
           {{ t('editor.ext.svg.paste_markup') }}
         </button>
       </div>
@@ -39,21 +31,19 @@
     </header>
 
     <section class="svg-adv-canvas-container">
-      <div
-        class="svg-adv-canvas-inner"
-        :style="{ transform: `scale(${zoomLocal})` }"
-      >
+      <div class="svg-adv-canvas-inner" :style="{ transform: `scale(${zoomLocal})` }">
+        <!-- Placeholder F2.19: indicador cuando el nodo tiene contenedores -->
+        <div v-if="hasContainers" class="svg-container-indicator">
+          Contenedores activos
+        </div>
+
         <div v-if="!svgMarkup">
           <p class="svg-adv-empty">
             {{ t('editor.ext.svg.empty_placeholder') }}
           </p>
         </div>
 
-        <div
-          v-else
-          class="svg-adv-svg-wrapper"
-          v-html="safeMarkup"
-        />
+        <div v-else class="svg-adv-svg-wrapper" v-html="safeMarkup" />
       </div>
     </section>
   </NodeViewWrapper>
@@ -66,17 +56,28 @@ import type { SvgAttributes } from './types'
 
 const props = defineProps(nodeViewProps)
 
-// i18n placeholder
 const t = (key: string) => key
 
-const zoomLocal = ref(1)
-
+// --- NUEVO: resourceId
 const svgAttrs = computed(() => props.node?.attrs as SvgAttributes)
-const svgMarkup = computed(() => svgAttrs.value?.svgMarkup ?? null)
 
-// NO hacemos sanitización agresiva aquí; se asume que la entrada viene
-// de fuentes confiables o pre-limpiadas por SVGO en el flujo de importación.
+if (!svgAttrs.value.resourceId && props.updateAttributes) {
+  props.updateAttributes({
+    ...svgAttrs.value,
+    resourceId: `svg-${Math.random().toString(36).slice(2, 10)}`,
+  })
+}
+
+const resourceId = computed(() => svgAttrs.value.resourceId)
+
+// --- NUEVO F2.19: atributo booleano para mostrar contenedores
+const hasContainers = computed(() => Boolean((props.node?.attrs as any).hasContainers))
+
+// --- Rendering existente
+const svgMarkup = computed(() => svgAttrs.value?.svgMarkup ?? null)
 const safeMarkup = computed(() => svgMarkup.value ?? '')
+
+const zoomLocal = ref(1)
 
 watch(
   () => svgAttrs.value?.view?.zoom,
@@ -110,94 +111,37 @@ function onZoomChange() {
 
 function onEditMarkup() {
   const current = svgMarkup.value ?? ''
-  const edited = window.prompt('Editar SVG (markup crudo):', current)
+  const edited = window.prompt('Editar SVG:', current)
   if (edited == null) return
 
   updateAttributes({
     ...svgAttrs.value,
     svgMarkup: edited,
-  } as SvgAttributes)
+  })
 }
 
 function onPasteMarkup() {
-  const pasted = window.prompt('Pega aquí el SVG (markup):')
+  const pasted = window.prompt('Pega SVG:')
   if (!pasted) return
 
   updateAttributes({
     ...svgAttrs.value,
     svgMarkup: pasted,
-  } as SvgAttributes)
+  })
 }
 </script>
 
 <style scoped>
-.svg-adv-node {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fafafa;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-}
+/* existentes */
 
-.svg-adv-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.svg-adv-btn {
-  border: 1px solid #d0d0ff;
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-  background: #f5f5ff;
-  cursor: pointer;
-}
-
-.svg-adv-btn:hover {
-  background: #ececff;
-}
-
-.svg-adv-zoom {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-}
-
-.svg-adv-zoom input[type='range'] {
-  width: 120px;
-}
-
-.svg-adv-zoom-value {
-  min-width: 3rem;
-  text-align: right;
-}
-
-.svg-adv-canvas-container {
-  border-radius: 6px;
-  background: #ffffff;
-  padding: 0.75rem;
-  overflow: auto;
-  max-height: 420px;
-}
-
-.svg-adv-canvas-inner {
-  transform-origin: top left;
-}
-
-.svg-adv-svg-wrapper svg {
-  max-width: 100%;
-  max-height: 100%;
-  display: block;
-}
-
-.svg-adv-empty {
-  font-size: 0.8rem;
-  color: #718096;
-  font-style: italic;
+.svg-container-indicator {
+  position: absolute;
+  background: #6a5af9dd;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  top: -20px;
+  left: 0;
 }
 </style>

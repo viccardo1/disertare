@@ -1,5 +1,4 @@
 // packages/editor-ext-stats-adv/src/datasets/index.ts
-
 import type { StatsDataset } from '../types'
 
 const registry = new Map<string, StatsDataset>()

@@ -109,6 +109,18 @@
         v-else-if="activePanel === 'svg'"
         :editor="editor"
       />
+
+      <!-- F2.18: Bitácora analítica -->
+      <EditorAnalyticsPanel
+        v-else-if="activePanel === 'analytics'"
+        :editor="editor"
+      />
+
+      <!-- F2.19: Zonas de texto -->
+      <EditorContainersPanel
+        v-else-if="activePanel === 'containers'"
+        :editor="editor"
+      />
     </section>
   </aside>
 </template>
@@ -132,6 +144,8 @@ import EditorPartsPanel from './EditorPartsPanel.vue'
 import EditorTocPanel from './EditorTocPanel.vue'
 import EditorSvgPanel from './EditorSvgPanel.vue'
 import EditorStatsAdvPanel from './EditorStatsAdvPanel.vue'
+import EditorAnalyticsPanel from './EditorAnalyticsPanel.vue'
+import EditorContainersPanel from './EditorContainersPanel.vue'
 
 type ActivePanel =
   | 'none'
@@ -149,6 +163,8 @@ type ActivePanel =
   | 'parts'
   | 'toc'
   | 'svg'
+  | 'analytics'
+  | 'containers'
 
 const props = defineProps<{
   activePanel: ActivePanel
@@ -196,6 +212,8 @@ const titles: Record<Exclude<ActivePanel, 'none'>, string> = {
   parts: 'Partes académicas',
   toc: 'TOC / Índice',
   svg: 'SVG avanzado',
+  analytics: 'Bitácora analítica',
+  containers: 'Zonas de texto',
 }
 
 const currentTitle = computed(() => {

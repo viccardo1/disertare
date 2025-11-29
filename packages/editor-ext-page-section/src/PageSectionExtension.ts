@@ -1,11 +1,10 @@
-// packages/editor-ext-page-section/src/PageSectionExtension.ts
-
 import { Extension } from '@tiptap/core'
 import type {
   PageHeaderFooterTemplate,
   PageSectionBreak,
   PageSectionConfig,
   PageSectionState,
+  SectionLayoutConfig,
 } from './types'
 
 /**
@@ -49,16 +48,36 @@ declare module '@tiptap/core' {
        * Útil para pruebas o para resetear el documento.
        */
       clearPageSections: () => ReturnType
+
+      /**
+       * Fija o actualiza el número de columnas lógicas de una sección (F2.19).
+       *
+       * Si `columns` es null/undefined se interpreta como 1 columna
+       * y se normaliza a `null` en el storage para mantener simple
+       * la compatibilidad hacia atrás.
+       */
+      setSectionColumns: (sectionId: string, columns: number | null | undefined) => ReturnType
+
+      /**
+       * Fija o actualiza los contenedores de texto asociados a una sección (F2.19).
+       *
+       * No realiza validaciones geométricas: solo persiste los metadatos.
+       * El motor de layout y la exportación decidirán cómo usarlos.
+       */
+      setSectionLayoutContainers: (
+        sectionId: string,
+        containers: SectionLayoutConfig['containers'],
+      ) => ReturnType
     }
   }
 }
 
 /**
  * Extensión ligera que modela secciones de página y su
- * configuración de encabezados/pies.
+ * configuración de encabezados/pies y layout (F2.19).
  *
  * No modifica el contenido del documento ni añade nodos visibles;
- * solo mantiene metadatos que luego usará F2.5 en la vista paginada
+ * solo mantiene metadatos que luego usará F2.5/F2.19 en la vista paginada
  * y en la exportación DOCX/PDF.
  */
 export const PageSectionExtension = Extension.create<PageSectionExtensionOptions>({
@@ -86,93 +105,142 @@ export const PageSectionExtension = Extension.create<PageSectionExtensionOptions
   addCommands() {
     return {
       setPageSectionBreak:
-        (sectionConfig?: Partial<PageSectionConfig>) =>
-        ({ state }) => {
-          const storage = this.storage as PageSectionState
+      (sectionConfig?: Partial<PageSectionConfig>) =>
+      ({ state }) => {
+        const storage = this.storage as PageSectionState
 
-          const { from } = state.selection
+        const { from } = state.selection
 
-          // Generar o reutilizar id de sección
-          const id =
-            sectionConfig?.id ??
-            `section-${storage.sections.length + 1}`
+        // Generar o reutilizar id de sección
+        const id =
+        sectionConfig?.id ??
+        `section-${storage.sections.length + 1}`
 
-          let section = storage.sections.find(s => s.id === id)
+        let section = storage.sections.find(s => s.id === id)
 
-          if (!section) {
-            section = {
-              id,
-              name: sectionConfig?.name,
-              templateId: sectionConfig?.templateId,
-              firstPageDifferent: sectionConfig?.firstPageDifferent,
-              oddEvenDifferent: sectionConfig?.oddEvenDifferent,
-              firstPageHeader: sectionConfig?.firstPageHeader,
-              firstPageFooter: sectionConfig?.firstPageFooter,
-              oddHeader: sectionConfig?.oddHeader,
-              oddFooter: sectionConfig?.oddFooter,
-              evenHeader: sectionConfig?.evenHeader,
-              evenFooter: sectionConfig?.evenFooter,
-              header: sectionConfig?.header,
-              footer: sectionConfig?.footer,
-            }
-
-            storage.sections.push(section)
-          } else if (sectionConfig) {
-            Object.assign(section, sectionConfig)
+        if (!section) {
+          section = {
+            id,
+            name: sectionConfig?.name,
+            templateId: sectionConfig?.templateId,
+            firstPageDifferent: sectionConfig?.firstPageDifferent,
+            oddEvenDifferent: sectionConfig?.oddEvenDifferent,
+            firstPageHeader: sectionConfig?.firstPageHeader,
+            firstPageFooter: sectionConfig?.firstPageFooter,
+            oddHeader: sectionConfig?.oddHeader,
+            oddFooter: sectionConfig?.oddFooter,
+            evenHeader: sectionConfig?.evenHeader,
+            evenFooter: sectionConfig?.evenFooter,
+            header: sectionConfig?.header,
+            footer: sectionConfig?.footer,
+            layout: sectionConfig?.layout,
           }
 
-          // Registrar corte de sección en la posición actual
-          const existingBreak = storage.breaks.find(b => b.pos === from)
+          storage.sections.push(section)
+        } else if (sectionConfig) {
+          Object.assign(section, sectionConfig)
+        }
 
-          if (existingBreak) {
-            existingBreak.sectionId = id
-          } else {
-            const newBreak: PageSectionBreak = {
-              pos: from,
-              sectionId: id,
-            }
+        // Registrar corte de sección en la posición actual
+        const existingBreak = storage.breaks.find(b => b.pos === from)
 
-            storage.breaks.push(newBreak)
-            storage.breaks.sort((a, b) => a.pos - b.pos)
+        if (existingBreak) {
+          existingBreak.sectionId = id
+        } else {
+          const newBreak: PageSectionBreak = {
+            pos: from,
+            sectionId: id,
           }
 
-          // No modifica el documento, solo storage -> devolver true
-          return true
-        },
+          storage.breaks.push(newBreak)
+          storage.breaks.sort((a, b) => a.pos - b.pos)
+        }
+
+        // No modifica el documento, solo storage -> devolver true
+        return true
+      },
 
       updatePageSection:
-        (sectionId: string, patch: Partial<PageSectionConfig>) =>
-        () => {
-          const storage = this.storage as PageSectionState
-          const section = storage.sections.find(s => s.id === sectionId)
+      (sectionId: string, patch: Partial<PageSectionConfig>) =>
+      () => {
+        const storage = this.storage as PageSectionState
+        const section = storage.sections.find(s => s.id === sectionId)
 
-          if (!section) return false
+        if (!section)
+          return false
 
           Object.assign(section, patch)
           return true
-        },
+      },
 
       removePageSection:
-        (sectionId: string) =>
-        () => {
-          const storage = this.storage as PageSectionState
+      (sectionId: string) =>
+      () => {
+        const storage = this.storage as PageSectionState
 
-          storage.sections = storage.sections.filter(s => s.id !== sectionId)
-          storage.breaks = storage.breaks.filter(b => b.sectionId !== sectionId)
+        storage.sections = storage.sections.filter(s => s.id !== sectionId)
+        storage.breaks = storage.breaks.filter(b => b.sectionId !== sectionId)
 
-          return true
-        },
+        return true
+      },
 
       clearPageSections:
-        () =>
-        () => {
-          const storage = this.storage as PageSectionState
+      () =>
+      () => {
+        const storage = this.storage as PageSectionState
 
-          storage.sections = []
-          storage.breaks = []
+        storage.sections = []
+        storage.breaks = []
+
+        return true
+      },
+
+      setSectionColumns:
+      (sectionId: string, columns: number | null | undefined) =>
+      () => {
+        const storage = this.storage as PageSectionState
+        const section = storage.sections.find(s => s.id === sectionId)
+
+        if (!section)
+          return false
+
+          const normalizedColumns =
+          columns == null || columns <= 1
+          ? null
+          : columns
+
+          if (!section.layout) {
+            section.layout = {
+              columns: normalizedColumns,
+              containers: null,
+            }
+          } else {
+            section.layout.columns = normalizedColumns
+          }
 
           return true
-        },
+      },
+
+      setSectionLayoutContainers:
+      (sectionId: string, containers: SectionLayoutConfig['containers']) =>
+      () => {
+        const storage = this.storage as PageSectionState
+        const section = storage.sections.find(s => s.id === sectionId)
+
+        if (!section)
+          return false
+
+          if (!section.layout) {
+            section.layout = {
+              columns: null,
+              containers: containers ?? null,
+            }
+          } else {
+            section.layout.containers = containers ?? null
+          }
+
+          return true
+      },
     }
   },
 })

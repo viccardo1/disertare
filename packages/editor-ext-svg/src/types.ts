@@ -16,7 +16,7 @@ export interface SvgSelection {
 }
 
 export interface SvgViewSettings {
-  zoom: number      // 0.25–4.0
+  zoom: number
   panX: number
   panY: number
   showGrid: boolean
@@ -26,6 +26,9 @@ export interface SvgViewSettings {
 }
 
 export interface SvgAttributes {
+  /** F2.19 — Identificador estable del recurso */
+  resourceId?: string | null
+
   svgMarkup: string | null
   viewBox?: { x: number; y: number; width: number; height: number } | null
 

@@ -1,5 +1,4 @@
 // packages/editor-ext-stats-adv/src/engine/index.ts
-
 import type {
   StatsBuiltSpecResult,
   StatsChartConfig,

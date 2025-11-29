@@ -1,5 +1,3 @@
-// packages/editor-ext-page-section/src/types.ts
-
 /**
  * Plantilla de encabezado/pie que puede usarse en varias secciones.
  * No hace nada "mágico": son simplemente strings con placeholders
@@ -16,10 +14,91 @@ export interface PageHeaderFooterTemplate {
 }
 
 /**
+ * Forma geométrica de un contenedor de texto.
+ * Se usan coordenadas normalizadas (0–1) relativas al ancho/alto
+ * del recurso asociado (imagen raster o SVG).
+ *
+ * Esto permite que F3.x pueda reutilizar la misma definición
+ * en distintos tamaños de página / resolución.
+ */
+export interface TextContainerShape {
+  /**
+   * Tipo de figura utilizada para el contenedor.
+   * En F2.19 se soportan rectángulos y polígonos generales.
+   */
+  kind: 'rect' | 'polygon'
+
+  /**
+   * Lista de puntos que definen la figura.
+   * Para 'rect' se esperarán 2 o 4 puntos (según la implementación
+   * futura del motor); para 'polygon', 3 o más puntos.
+   *
+   * Las coordenadas están normalizadas:
+   *  - x en [0, 1] relativo al ancho del recurso
+   *  - y en [0, 1] relativo al alto del recurso
+   */
+  points: { x: number; y: number }[]
+}
+
+/**
+ * Región de contenedor de texto asociada a un recurso gráfico
+ * (imagen raster o SVG).
+ *
+ * No impone cómo se resuelve el recurso: solo guarda
+ * un identificador estable (`resourceId`) que deberá
+ * ser resuelto por el dominio de imágenes/SVG.
+ */
+export interface TextContainerRegion {
+  /**
+   * Identificador único de la región dentro de la sección.
+   */
+  id: string
+
+  /**
+   * Identificador del recurso gráfico al que está anclada
+   * esta región (por ejemplo, un nodo de imagen o SVG).
+   */
+  resourceId: string
+
+  /**
+   * Figura geométrica que define el área de texto.
+   */
+  shape: TextContainerShape
+}
+
+/**
+ * Configuración de layout asociada a una sección.
+ *
+ * En F2.19 se modelan:
+ *  - número de columnas lógicas para el flujo de texto
+ *  - contenedores de texto ligados a recursos gráficos
+ *
+ * El motor de paginado (F2.5/F2.19) y la exportación se apoyarán
+ * en estos metadatos sin duplicar contenido lógico.
+ */
+export interface SectionLayoutConfig {
+  /**
+   * Número de columnas lógicas de la sección.
+   * Si es null/undefined, se asume 1 columna.
+   */
+  columns?: number | null
+
+  /**
+   * Conjunto opcional de contenedores de texto asociados
+   * a la sección.
+   *
+   * F2.19 solo define la estructura; la lógica completa
+   * de distribución de texto puede evolucionar en F3.x.
+   */
+  containers?: TextContainerRegion[] | null
+}
+
+/**
  * Configuración de una sección de página.
  * Permite modelar:
  *  - Primera página diferente (firstPageDifferent)
  *  - Encabezados/pies distintos para páginas impares/pares (oddEvenDifferent)
+ *  - Layout de columnas y contenedores de texto (F2.19)
  */
 export interface PageSectionConfig {
   id: string
@@ -60,6 +139,13 @@ export interface PageSectionConfig {
    */
   header?: string
   footer?: string
+
+  /**
+   * Configuración de layout de la sección (F2.19).
+   * Es opcional para mantener compatibilidad con documentos
+   * anteriores a F2.19.
+   */
+  layout?: SectionLayoutConfig
 }
 
 /**

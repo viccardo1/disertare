@@ -1,5 +1,4 @@
 // packages/editor-ext-stats-adv/src/syntax/index.ts
-
 import type {
   EncodingChannel,
   EncodingDataType,
@@ -16,12 +15,6 @@ export interface ParsedStatsCommand {
 
 /**
  * Determina un tipo de dato por defecto a partir del nombre del campo.
- *
- * Importante:
- * - DEFAULT = 'nominal' (categórico).
- * - Sólo devolvemos 'quantitative' cuando el nombre sugiere fuertemente
- *   un valor numérico (edad, valor, precio, etc.).
- * - Campos de fecha/hora se marcan como 'temporal'.
  */
 function inferTypeFromFieldName(field: string): EncodingDataType {
   const lower = field.toLowerCase()
