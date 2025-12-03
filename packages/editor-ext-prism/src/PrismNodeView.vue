@@ -1,3 +1,14 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
 <!-- packages/editor-ext-prism/src/PrismNodeView.vue -->
 <template>
   <NodeViewWrapper class="prism-node" :aria-label="t('editor.ext.prism.code_block')">

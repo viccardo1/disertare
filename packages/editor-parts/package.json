@@ -10,5 +10,12 @@
     "@tiptap/core": "3.10.2",
     "@tiptap/pm": "3.10.2",
     "@disertare/editor-core": "workspace:*"
+  },
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

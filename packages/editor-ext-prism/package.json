@@ -13,5 +13,12 @@
   },
   "dependencies": {
     "prismjs": "^1.29.0"
+  },
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

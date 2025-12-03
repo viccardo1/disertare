@@ -8,5 +8,12 @@
     "@disertare/editor-core": "workspace:^",
     "@tiptap/core": "3.10.2",
     "@tiptap/vue-3": "3.10.2"
+  },
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

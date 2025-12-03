@@ -1,3 +1,14 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
 import { Node, mergeAttributes } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { PrismNodeView } from './PrismNodeView'

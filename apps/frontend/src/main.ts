@@ -1,3 +1,13 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
 // /home/vicente/Disertare/apps/frontend/src/main.ts
 import { createApp } from 'vue'
 import App from './App.vue'

@@ -1,3 +1,14 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
 import { Table as TiptapTable } from '@tiptap/extension-table'
 import TableRowBase from '@tiptap/extension-table-row'
 import TableHeaderBase from '@tiptap/extension-table-header'

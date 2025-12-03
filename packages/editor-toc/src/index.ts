@@ -1,3 +1,14 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
 // packages/editor-toc/src/index.ts
 import type { TocEntry, ComputeTocOptions } from './types'
 

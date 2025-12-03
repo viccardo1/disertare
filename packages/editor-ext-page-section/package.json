@@ -11,6 +11,12 @@
     "@tiptap/pm": "3.10.2",
     "@disertare/editor-core": "workspace:*"
   },
-  "license": "MIT",
-  "description": "Extensión de secciones de página y encabezados/pies 1:1 para el editor Disertare (F2.5)."
+  "license": "UNLICENSED",
+  "description": "Extensión de secciones de página y encabezados/pies 1:1 para el editor Disertare (F2.5).",
+  "author": "Disertare Project",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
+  }
 }

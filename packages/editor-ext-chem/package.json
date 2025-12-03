@@ -2,5 +2,13 @@
   "name": "@disertare/editor-ext-chem",
   "version": "0.0.1",
   "main": "src/index.ts",
-  "type": "module"
+  "type": "module",
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "private": true,
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
+  }
 }

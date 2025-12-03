@@ -1,8 +1,15 @@
-  {
+{
   "name": "@disertare/frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",

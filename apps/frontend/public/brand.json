@@ -1,0 +1,21 @@
+{
+  "name": "Disertare",
+  "description": "Plataforma avanzada de edición técnica, científica y multidisciplinaria.",
+  "brandVersion": "2025-F0",
+  "license": {
+    "type": "Licencia Privativa",
+    "shortName": "UNLICENSED",
+    "owner": "Disertare Project",
+    "copyright": "© 2025 Disertare Project",
+    "url": "https://disertare.app"
+  },
+  "assets": {
+    "logo": "/logo.svg",
+    "favicon": "/favicon.ico"
+  },
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
+  }
+}

@@ -2,7 +2,7 @@
   "name": "@disertare/editor-ext-stats",
   "version": "0.0.0",
   "main": "src/index.ts",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "peerDependencies": {
     "@tiptap/core": "^3.10.2",
     "@tiptap/vue-3": "^3.10.2",
@@ -11,5 +11,12 @@
   "dependencies": {
     "vega-lite": "^5.20.0",
     "vega-embed": "^6.26.0"
+  },
+  "author": "Disertare Project",
+  "private": true,
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

@@ -7,5 +7,12 @@
   "dependencies": {
     "@tiptap/core": "^2.0.0",
     "@tiptap/vue-3": "^2.0.0"
+  },
+  "author": "Disertare Project",
+  "license": "UNLICENSED",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

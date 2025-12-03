@@ -58,5 +58,11 @@
       "@tiptap/extension-table-cell": "3.10.2",
       "@tiptap/extension-table-header": "3.10.2"
     }
+  },
+  "author": "Disertare Project",
+  "disertareBrand": {
+    "copyright": "© 2025 Disertare Project",
+    "licenseType": "Licencia Privativa",
+    "url": "https://disertare.app"
   }
 }

@@ -1,4 +1,15 @@
 /**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  D  DISERTARE                                                    ║
+ * ║  Plataforma avanzada de edición técnica, científica y            ║
+ * ║  multidisciplinaria.                                             ║
+ * ║                                                                  ║
+ * ║  © 2025 Disertare Project — Licencia Privativa.                  ║
+ * ║  Todos los derechos reservados.                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+/**
  * Plantilla de encabezado/pie que puede usarse en varias secciones.
  * No hace nada "mágico": son simplemente strings con placeholders
  * como {PAGE}, {PAGES}, {TITLE}, {DATE}, {AUTHOR}, {SECTION}.
