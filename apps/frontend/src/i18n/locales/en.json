@@ -1,0 +1,18 @@
+{
+  "app": {
+    "brand": {
+      "name": "Disertare",
+      "infrastructureBadge": "F0 · Infrastructure"
+    },
+    "nav": {
+      "editor": "Editor",
+      "maintenance": "Maintenance"
+    },
+    "footer": {
+      "title": "Disertare",
+      "legal": "© 2025 Disertare Project — Private License. All rights reserved.",
+      "icx": "ICX · F0–F52",
+      "shell": "AppShell · Editor-Core"
+    }
+  }
+}
