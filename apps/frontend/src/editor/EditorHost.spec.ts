@@ -9,21 +9,31 @@
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-import { Editor } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
+import { describe, it, expect, vi } from "vitest"
+import { mount } from "@vue/test-utils"
+import * as shell from "./useEditorShell"
 
-export const extensionRegistry: Set<(editor: Editor) => void> = new Set()
+// Mock de EditorContent de @tiptap/vue-3 para no ejecutar lógica real
+vi.mock("@tiptap/vue-3", () => ({
+  EditorContent: {
+    name: "EditorContent",
+    props: ["editor"],
+    template: `<div class="mock-editor-content"></div>`,
+  },
+}))
 
-export const registerExtension = (fn: (editor: Editor) => void): void => {
-  extensionRegistry.add(fn)
-}
+import EditorHost from "./EditorHost.vue"
 
-export function createDisertareEditor(options = {}) {
-  const editor = new Editor({
-    extensions: [StarterKit],
-    ...options,
+describe("EditorHost.vue", () => {
+  it("monta el editor host y la toolbar básica", () => {
+    const fakeEditor = { id: "fake-editor" }
+
+    vi.spyOn(shell, "useEditorShell").mockReturnValue({ editor: fakeEditor })
+
+    const wrapper = mount(EditorHost)
+
+    expect(wrapper.find(".dsr-editor-host").exists()).toBe(true)
+    expect(wrapper.find(".dsr-toolbar").exists()).toBe(true)
+    expect(wrapper.find(".mock-editor-content").exists()).toBe(true)
   })
-
-  extensionRegistry.forEach(fn => fn(editor))
-  return editor
-}
+})

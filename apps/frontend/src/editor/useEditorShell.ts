@@ -9,21 +9,19 @@
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-import { Editor } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
+import { createDisertareEditor } from '@disertare/editor-core'
 
-export const extensionRegistry: Set<(editor: Editor) => void> = new Set()
-
-export const registerExtension = (fn: (editor: Editor) => void): void => {
-  extensionRegistry.add(fn)
-}
-
-export function createDisertareEditor(options = {}) {
-  const editor = new Editor({
-    extensions: [StarterKit],
-    ...options,
+export function useEditorShell() {
+  const editor = createDisertareEditor({
+    autofocus: true,
+    editorProps: {
+      attributes: {
+        class: 'dsr-editor-area',
+        role: 'textbox',
+        'aria-multiline': 'true'
+      }
+    }
   })
 
-  extensionRegistry.forEach(fn => fn(editor))
-  return editor
+  return { editor }
 }

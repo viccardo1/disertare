@@ -15,5 +15,11 @@
     "copyright": "© 2025 Disertare Project",
     "licenseType": "Licencia Privativa",
     "url": "https://disertare.app"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.15"
+  },
+  "scripts": {
+    "test": "vitest"
   }
 }

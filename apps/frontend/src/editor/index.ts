@@ -9,21 +9,5 @@
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-import { Editor } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
-
-export const extensionRegistry: Set<(editor: Editor) => void> = new Set()
-
-export const registerExtension = (fn: (editor: Editor) => void): void => {
-  extensionRegistry.add(fn)
-}
-
-export function createDisertareEditor(options = {}) {
-  const editor = new Editor({
-    extensions: [StarterKit],
-    ...options,
-  })
-
-  extensionRegistry.forEach(fn => fn(editor))
-  return editor
-}
+export { default as EditorHost } from './EditorHost.vue'
+export * from './useEditorShell'
